@@ -47,6 +47,7 @@ vgg_losses = {\
 
 fake_datasets = {\
 	'GTA':ds.PfDDataset,
+	'Carla' : ds.CarlaDataset
 }
 
 
@@ -357,6 +358,7 @@ class EPEExperiment(ee.GANExperiment):
 
 	def evaluate_test(self, batch_fake, batch_id):
 		new_img = self.network.generator(batch_fake)
+		print(new_img)
 		return new_img, batch_fake.img, batch_fake.path[0].stem
 
 

@@ -20,12 +20,12 @@ if __name__ == '__main__':
     device = torch.device('cuda')
 
     parser = argparse.ArgumentParser("Compute a fake set of G-buffers using VGG-16 features. \
-This is just to showcase the pipeline/network architecture. \
-Instead of these fake G-buffers generated from images, we strongly recommend extracting suitable info from the rendering pipeline.")
-    parser.add_argument('name', type=str, help="Name of the dataset.")
-    parser.add_argument('img_list', type=Path, help="Path to csv file with path to images in first column.")
+    This is just to showcase the pipeline/network architecture. \
+    Instead of these fake G-buffers generated from images, we strongly recommend extracting suitable info from the rendering pipeline.")
+    parser.add_argument('name', type=str, help="Name of the dataset." , default="Carla")
+    parser.add_argument('img_list', type=Path, help="Path to csv file with path to images in first column." , default='/home/aitester/PycharmProjects/PhotorealismEnhancement/code/data/A2D2/A2D2.csv')
     parser.add_argument('-n', '--num_loaders', type=int, default=1)
-    parser.add_argument('--out_dir', type=Path, help="Where to store the fake gbuffer.", default='.')
+    parser.add_argument('--out_dir', type=Path, help="Where to store the fake gbuffer.", default='/home/aitester/PycharmProjects/PhotorealismEnhancement/code/data/Carla/gbuffers')
     args = parser.parse_args()
 
     network   = VGG16(False, padding='none').to(device)
