@@ -38,62 +38,59 @@ if not os.path.exists(save_directoryGbuffers):
     os.makedirs(save_directoryGbuffers)
 
 infodict = dict()
-infodict[ "sky"  ]  = [128,128,128, 23   ]
-infodict[ "road"  ]  = [128,64,128, 7  ]
-infodict[ "static"  ]  = [128,128,192, 8   ]
-infodict[ "sidewalk"  ]  = [0,0,192  , 9   ]
-infodict[ "vehicle"  ]  = [64,0,128 , 26   ]
-
-infodict[ "Truck_Bus"  ]  = [192,128,192, 26   ]
-infodict[ "SUVPickupTruck"  ]  = [64,128,192, 26   ]
-
-infodict[ "MotorcycleScooter"  ]  = [192,0,192, 26   ]
-
 infodict[ "unlabeled"  ]  = [0, 0, 0, 0   ]
+infodict[ "sky"  ]  = [70,130,180, 23   ]
+infodict[ "road"  ]  = [128,64,128, 7  ]
+infodict[ "static"  ]  = [20,20,20, 8   ]
+infodict[ "sidewalk"  ]  = [244,35,232, 9   ]
 
-infodict[ "building"  ]  = [128,0,0 , 4  ]
-infodict["Fence"] = [64,64,128,  11 ]
+infodict[ "car"  ]  = [0,0,142, 26   ] 
+infodict[ "truck"  ]  = [0,0,70,26   ] 
+infodict[ "bus"  ]  = [0,60,100,26   ] 
+infodict[ "caravan"  ]  = [0,0,90,26   ] 
+infodict[ "trailer"  ]  = [0,0,110,26   ] 
+infodict[ "train"  ]  = [0,80,100,26   ] 
+infodict[ "motorcycle"  ]  = [0,0,230,26   ] 
+infodict[ "bicycle"  ]  = [119,11,32,26   ] 
+infodict[ "licenseplate"  ]  = [0,0,142,26   ]
 
-infodict["other"] = [128,64,64,  0 ]
+infodict["person"] = [220,20,60, 24  ]
+infodict["rider"] = [255,0,0, 24  ]
 
-infodict["Pedestrian"] = [64,64,0  , 24  ]
+infodict["Ground"] = [81,0,81, 9]
 
-infodict["infrastructure"] = [192,192,128 , 17 ]
+infodict[ "dynamic"  ]  = [111,74,0, 26   ] 
 
-infodict["RoadLine"] = [128,0,192 , 7]
+infodict[ "building"  ]  = [70, 70, 70 , 4  ]
+infodict["Wall"] = [102, 102, 156 ,  4  ]
 
-infodict["Vegetation"] = [192,192,0  ,  21 ]
-infodict["Tree"] = [128,128,0  ,  21 ]
+infodict["Fence"] = [190,153,153,  11 ]
 
-infodict["Wall"] = [64,192,0 ,  4  ]
+infodict["GuardRail"] = [180,165,180, 9  ]
 
-infodict["TrafficSign"] = [192,128,128 , 20]
-infodict["Misc_Text"] = [128,128,6, 20]
+infodict["Bridge"] = [150, 100, 100 ,  4  ]
+infodict["tunnel"] = [150,120,90,  4  ]
 
+infodict["pole"] = [153, 153, 153 , 17 ]
 
-infodict["Ground"] = [192,192,0 , 9]
+infodict["TrafficLight"] = [250,170,30, 19  ]
 
-infodict["Bridge"] = [0,128,64 ,  4  ]
-
-infodict["RailTrack"] = [64,0,192 , 9  ]
-
-infodict["GuardRail"] = [192,0,64 , 9  ]
-infodict["TrafficCone"] = [0,0,64 , 9  ]
-infodict["ParkingBlock"] = [64,192,128, 9  ]
+infodict["TrafficSign"] = [220, 220, 0 , 20]
 
 
-infodict["TrafficLight"] = [0,64,64 , 19  ]
 
-infodict["Terrain"] = [192,64,128, 22 ]
+
+infodict["Vegetation"] = [107, 142, 35 ,  21 ]
+ 
  
 
-infodict["Animal"] = [64,128,64 , 24  ]
-infodict["Child"] = [192,128,64  , 24  ]
-infodict["Bicyclist"] = [0,128,192 , 24  ]
+infodict[ "parking"  ]  = [250,170,160, 7  ]
 
 
-infodict[ "Archway"  ]  = [64,128,64, 4  ]
-infodict[ "Tunnel"  ]  = [64,0,64, 4  ]
+infodict["RailTrack"] = [230, 150, 140 , 9  ]
+
+
+infodict["Terrain"] = [152,251,152, 22 ]
 
 def encod_Gt(gt_labelmap):
 
