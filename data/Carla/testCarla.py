@@ -18,6 +18,8 @@ import time
 from subprocess import call
 import subprocess
 import shutil
+import random
+
 
 try:
     sys.path.append(glob.glob('/opt/carla-simulator/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
@@ -40,7 +42,7 @@ from numpy import random
 
 IM_width = 960
 IM_Hight = 540
-
+fov = 105
 
 def get_actor_blueprints(world, filter, generation):
     bps = world.get_blueprint_library().filter(filter)
@@ -85,13 +87,13 @@ def main(index = 0):
     argparser.add_argument(
         '-n', '--number-of-vehicles',
         metavar='N',
-        default=30,
+        default=100,
         type=int,
         help='Number of vehicles (default: 30)')
     argparser.add_argument(
         '-w', '--number-of-walkers',
         metavar='W',
-        default=10,
+        default=50,
         type=int,
         help='Number of walkers (default: 10)')
     argparser.add_argument(
@@ -167,9 +169,9 @@ def main(index = 0):
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
-	
 
-	
+
+
     #os.system("/opt/carla-simulator/CarlaUE4.sh -RenderOffScreen")
     #call(["/opt/carla-simulator/CarlaUE4.sh", ""])#-RenderOffScreen
     subprocess.Popen(["/opt/carla-simulator/CarlaUE4.sh", "-RenderOffScreen" ] )
@@ -182,18 +184,19 @@ def main(index = 0):
     walkers_list = []
     all_id = []
     client = carla.Client(args.host, args.port)
-    client.set_timeout(10.0)
-    synchronous_master = True
+    client.set_timeout(1.0)
+    synchronous_master = False
     random.seed(args.seed if args.seed is not None else int(time.time()))
 
     try:
         print("ok")
         #world = client.get_world()
-        world = client.load_world('Town03')
+        Town = random.choice(["Town01" ,"Town02" ,"Town03" ,"Town04" ,"Town05" ,"Town06" ,"Town07" ,"Town08" ,"Town09" ,"Town10"  ])
+        world = client.load_world(Town)
         blueprint_library = world.get_blueprint_library()
 
         vehicle_bp = blueprint_library.filter('audi')[0]
-        point0 = world.get_map().get_spawn_points()[5]
+        point0 = random.choice(world.get_map().get_spawn_points())
 
         vehicle = world.spawn_actor(vehicle_bp, point0)
         actor_list.append(vehicle)
@@ -201,7 +204,7 @@ def main(index = 0):
         vehicle.set_autopilot(True)
 
 
-        fov = 105
+
         # camera_bp = blueprint_library.find('sensor.camera.rgb')
         #camera_bp = blueprint_library.find('sensor.camera.semantic_segmentation')
         camera_bp = blueprint_library.find('sensor.camera.instance_segmentation')
@@ -481,82 +484,83 @@ def main(index = 0):
 
 if __name__ == '__main__':
 
-	allOk = False
-	i =0
-	
-	rgb_target  = "/home/aitester/Datasets/Carla/rgb"
-	semantic_target = "/home/aitester/Datasets/Carla/semantic_segmentation"
-	depth_target = "/home/aitester/Datasets/Carla/depth"
+    print("#######################################################################")
+
+    out_rgp = f'./_out/rgb'
+    out_semantic = f'./_out/semantic_segmentation'
+    out_depth = f'./_out/depth'
 
 
-	if not os.path.exists(rgb_target):
-		os.makedirs(rgb_target)
+    i =0
+
+    rgb_target = "/home/aitester/Datasets/Carla/rgb"
+    semantic_target = "/home/aitester/Datasets/Carla/semantic_segmentation"
+    depth_target = "/home/aitester/Datasets/Carla/depth"
+
+    if not os.path.exists(rgb_target):
+        os.makedirs(rgb_target)
+
+    if not os.path.exists(semantic_target):
+        os.makedirs(semantic_target)
+
+    if not os.path.exists(depth_target):
+        os.makedirs(depth_target)
+
+    targetFilels = 31448
+    allOk = False
+    while not allOk:
+        i = i + 1
+        try:
+            main(i)
+        except:
+            print("end")
 
 
-	if not os.path.exists(semantic_target):
-		os.makedirs(semantic_target)
+        filelist_rgp = [file for file in os.listdir(out_rgp)]
+        #print(filelist_rgp)
+
+        for file in filelist_rgp:
+            path1 = os.path.join(out_semantic, file)
+            path2 = os.path.join(out_depth, file)
+            if not ( os.path.exists(path1) and os.path.exists(path2) ) :
+
+                os.remove(os.path.join(out_rgp, file))
+
+        filelist_semantic = [file for file in os.listdir(out_semantic)]
+        for file in filelist_semantic:
+            path1 = os.path.join(out_rgp, file)
+            path2 = os.path.join(out_depth, file)
+            if not ( os.path.exists(path1) and os.path.exists(path2) ):
+                os.remove(os.path.join(out_semantic, file))
 
 
-	if not os.path.exists(depth_target):
-		os.makedirs(depth_target)
-	
-	targetFilels = 1000
-	
-	while  not allOk:
-		i = i+1
-		main(i)
-		
-		out_rgp = f'./_out/rgb'
-		out_semantic = f'./_out/rgb'		
-		out_depth = f'./_out/rgb'
+        filelist_depth = [file for file in os.listdir(out_depth)]
+        for file in filelist_depth:
+            path1 = os.path.join(out_rgp, file)
+            path2 = os.path.join(out_semantic, file)
+            if not ( os.path.exists(path1) and os.path.exists(path2) ):
+                os.remove(os.path.join(out_depth, file))
 
-		filelist_rgp = [file for file in os.listdir(out_rgp) ]	
-		for file in filelist_rgp:
-            path1 = os.path.join(out_semantic , file)
-            path2 = os.path.join(out_depth , file)
-			if os.path.exists(path1) and os.path.exists(path2):
-				pass #all Ok
-			else:
-				os.remove(os.path.join(out_rgp , file))
-			
-				
-		filelist_semantic = [file for file in os.listdir(out_semantic) ]
-		for file in filelist_semantic:
-            path1 = os.path.join(out_rgp , file)
-            path2 = os.path.join(out_depth , file)
-			if os.path.exists(path1) and os.path.exists(path2):
-				pass #all Ok
-			else:
-				os.remove(os.path.join(out_semantic , file))				
-				
- 
-		filelist_rgp = [file for file in os.listdir(out_rgp) ]	
-		for file in filelist_rgp:
-			current = os.path.join(out_rgp , file)
-			destination = os.path.join(rgb_target , file)
-			shutil.move(current, destination)
 
-		filelist_semantic = [file for file in os.listdir(out_semantic) ]	
-		for file in filelist_semantic:
-			current = os.path.join(out_semantic , file)
-			destination = os.path.join(semantic_target , file)
-			shutil.move(current, destination)
-				
+        filelist_rgp = [file for file in os.listdir(out_rgp)]
+        for file in filelist_rgp:
+            current = os.path.join(out_rgp, file)
+            destination = os.path.join(rgb_target, file)
+            shutil.move(current, destination)
 
-		filelist_depth = [file for file in os.listdir(out_depth) ]	
-		for file in filelist_depth:
-			current = os.path.join(out_depth , file)
-			destination = os.path.join(depth_target , file)
-			shutil.move(current, destination)
-			
-			
-		
-		filelist_rgb_target = [file for file in  ]	
-		
-		if len(os.listdir(rgb_target)) >= targetFilels:
-			allOk = True
-			break
-		
-		
-		
-		
+        filelist_semantic = [file for file in os.listdir(out_semantic)]
+        for file in filelist_semantic:
+            current = os.path.join(out_semantic, file)
+            destination = os.path.join(semantic_target, file)
+            shutil.move(current, destination)
+
+        filelist_depth = [file for file in os.listdir(out_depth)]
+        for file in filelist_depth:
+            print(file)
+            current = os.path.join(out_depth, file)
+            destination = os.path.join(depth_target, file)
+            shutil.move(current, destination)
+
+        if len(os.listdir(rgb_target)) >= targetFilels:
+            allOk = True
+            break
