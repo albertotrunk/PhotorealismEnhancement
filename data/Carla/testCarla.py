@@ -15,7 +15,8 @@ import glob
 import os
 import sys
 import time
-
+from subprocess import call
+import subprocess
 try:
     sys.path.append(glob.glob('/opt/carla-simulator/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
@@ -160,16 +161,24 @@ def main():
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
+    #os.system("/opt/carla-simulator/CarlaUE4.sh -RenderOffScreen")
+    #call(["/opt/carla-simulator/CarlaUE4.sh", ""])#-RenderOffScreen
+    subprocess.Popen(["/opt/carla-simulator/CarlaUE4.sh" ] )
+
+    time.sleep(30)
+
+    print("done")
     actor_list = []
     vehicles_list = []
     walkers_list = []
     all_id = []
     client = carla.Client(args.host, args.port)
-    client.set_timeout(250.0)
-    synchronous_master = False
+    client.set_timeout(10.0)
+    synchronous_master = True
     random.seed(args.seed if args.seed is not None else int(time.time()))
 
     try:
+        print("ok")
         #world = client.get_world()
         world = client.load_world('Town03')
         blueprint_library = world.get_blueprint_library()
