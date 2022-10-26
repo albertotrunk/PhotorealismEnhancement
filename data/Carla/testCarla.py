@@ -19,7 +19,7 @@ from subprocess import call
 import subprocess
 import shutil
 import random
-
+import string
 
 try:
     sys.path.append(glob.glob('/opt/carla-simulator/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
@@ -491,7 +491,7 @@ if __name__ == '__main__':
     out_depth = f'./_out/depth'
 
 
-    i =0
+    i =5
 
     rgb_target = "/home/aitester/Datasets/Carla/rgb"
     semantic_target = "/home/aitester/Datasets/Carla/semantic_segmentation"
@@ -512,55 +512,63 @@ if __name__ == '__main__':
         i = i + 1
         try:
             main(i)
+
+            filelist_rgp = [file for file in os.listdir(out_rgp)]
+            #print(filelist_rgp)
+
+            for file in filelist_rgp:
+                path1 = os.path.join(out_semantic, file)
+                path2 = os.path.join(out_depth, file)
+                if not ( os.path.exists(path1) and os.path.exists(path2) ) :
+                    os.remove(os.path.join(out_rgp, file))
+
+            filelist_semantic = [file for file in os.listdir(out_semantic)]
+            for file in filelist_semantic:
+                path1 = os.path.join(out_rgp, file)
+                path2 = os.path.join(out_depth, file)
+                if not ( os.path.exists(path1) and os.path.exists(path2) ):
+                    os.remove(os.path.join(out_semantic, file))
+
+
+            filelist_depth = [file for file in os.listdir(out_depth)]
+            for file in filelist_depth:
+                path1 = os.path.join(out_rgp, file)
+                path2 = os.path.join(out_semantic, file)
+                if not ( os.path.exists(path1) and os.path.exists(path2) ):
+                    os.remove(os.path.join(out_depth, file))
+
+            rand_str = ''.join(random.choice(string.ascii_letters) for i in range(5))
+
+            filelist_rgp = [file for file in os.listdir(out_rgp)]
+            for file in filelist_rgp:
+                current = os.path.join(out_rgp, file)
+                destination = os.path.join(rgb_target, file)
+                if os.path.isfile(destination):
+                    destination = os.path.join(rgb_target, rand_str + file)
+
+                shutil.move(current, destination)
+
+            filelist_semantic = [file for file in os.listdir(out_semantic)]
+            for file in filelist_semantic:
+                current = os.path.join(out_semantic, file)
+                destination = os.path.join(semantic_target, file)
+                if os.path.isfile(destination):
+                    destination = os.path.join(semantic_target, rand_str + file)
+
+                shutil.move(current, destination)
+
+            filelist_depth = [file for file in os.listdir(out_depth)]
+            for file in filelist_depth:
+                print(file)
+                current = os.path.join(out_depth, file)
+                destination = os.path.join(depth_target, file)
+                if os.path.isfile(destination):
+                    destination = os.path.join(depth_target, rand_str + file)
+
+                shutil.move(current, destination)
+
+            if len(os.listdir(rgb_target)) >= targetFilels:
+                allOk = True
+                break
         except:
             print("end")
-
-
-        filelist_rgp = [file for file in os.listdir(out_rgp)]
-        #print(filelist_rgp)
-
-        for file in filelist_rgp:
-            path1 = os.path.join(out_semantic, file)
-            path2 = os.path.join(out_depth, file)
-            if not ( os.path.exists(path1) and os.path.exists(path2) ) :
-
-                os.remove(os.path.join(out_rgp, file))
-
-        filelist_semantic = [file for file in os.listdir(out_semantic)]
-        for file in filelist_semantic:
-            path1 = os.path.join(out_rgp, file)
-            path2 = os.path.join(out_depth, file)
-            if not ( os.path.exists(path1) and os.path.exists(path2) ):
-                os.remove(os.path.join(out_semantic, file))
-
-
-        filelist_depth = [file for file in os.listdir(out_depth)]
-        for file in filelist_depth:
-            path1 = os.path.join(out_rgp, file)
-            path2 = os.path.join(out_semantic, file)
-            if not ( os.path.exists(path1) and os.path.exists(path2) ):
-                os.remove(os.path.join(out_depth, file))
-
-
-        filelist_rgp = [file for file in os.listdir(out_rgp)]
-        for file in filelist_rgp:
-            current = os.path.join(out_rgp, file)
-            destination = os.path.join(rgb_target, file)
-            shutil.move(current, destination)
-
-        filelist_semantic = [file for file in os.listdir(out_semantic)]
-        for file in filelist_semantic:
-            current = os.path.join(out_semantic, file)
-            destination = os.path.join(semantic_target, file)
-            shutil.move(current, destination)
-
-        filelist_depth = [file for file in os.listdir(out_depth)]
-        for file in filelist_depth:
-            print(file)
-            current = os.path.join(out_depth, file)
-            destination = os.path.join(depth_target, file)
-            shutil.move(current, destination)
-
-        if len(os.listdir(rgb_target)) >= targetFilels:
-            allOk = True
-            break
