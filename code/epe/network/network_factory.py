@@ -4,7 +4,7 @@ from math import sqrt
 import torch
 import torch.nn as nn
 
-
+epsilon=1e-08
 logger = logging.getLogger('epe.nf')
 
 norm_factory = {\
@@ -74,6 +74,7 @@ class ResBlock(nn.Module):
 		pass
 
 	def forward(self, x):
+		x = x+epsilon
 		return self.relu(self.conv(x) + (x if self.down is None else self.down(x)))
 
 
@@ -88,6 +89,7 @@ class Res2Block(nn.Module):
 		pass
 
 	def forward(self, x):
+		x = x + epsilon
 		return 0.1 * self.conv(x) + (x if self.down is None else self.down(x))
 
 

@@ -15,6 +15,8 @@ import epe.network.network_factory as nf
 
 # this is for Kornia, used just for anti-aliased resizing
 import warnings
+epsilon=1e-08
+
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
 logger = logging.getLogger(__name__)
@@ -26,6 +28,7 @@ class DomainNorm2d(nn.Module):
 		self._bias  = nn.Parameter(torch.normal(0, 1, (1,dim,1,1)))
 
 	def forward(self, x):
+		x=x+epsilon
 		return x.div(x.pow(2).sum(dim=1, keepdims=True).clamp(min=1e-5).sqrt()) * self._scale + self._bias
 
 class CompareNorm2d(nn.Module):
@@ -37,6 +40,7 @@ class CompareNorm2d(nn.Module):
 		self._norm   = nn.InstanceNorm2d(dim, affine=False)
 
 	def forward(self, x):
+		x = x + epsilon
 		z = self._norm(x)
 		y = x.div(x.pow(2).sum(dim=1, keepdims=True).clamp(min=1e-5).sqrt())
 		return self._reduce(torch.cat((x, y * self._scale + self._bias, z), 1))
@@ -50,6 +54,7 @@ class CompareNorm2d2(nn.Module):
 		self._norm   = nn.InstanceNorm2d(dim, affine=True)
 
 	def forward(self, x):
+		x = x + epsilon
 		z = self._norm(x)
 		y = x.div(x.pow(2).sum(dim=1, keepdims=True).clamp(min=1e-5).sqrt())
 		return self._reduce(torch.cat((x, y * self._scale + self._bias, z), 1))
@@ -91,6 +96,7 @@ class DiscriminatorEnsemble(nn.Module):
 
 		assert len(run_discs) == len(self.discs)
 		x = self.prepare_input(fix_input=fix_input, run_discs=run_discs, **x)
+
 		return [di(xi) if rd else None for xi, rd, di in zip(x, run_discs, self.discs)]
 
 	def __len__(self):
@@ -150,6 +156,7 @@ class ProjectionDiscriminator(nn.Module):
 
 	def forward(self, t):
 		x,y = t
+
 
 		self._log.debug(f'disc.forward(x: {x.shape}, y: {y.shape})')
 		x = self.model(x)

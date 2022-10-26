@@ -37,7 +37,7 @@ if not os.path.exists(save_directoryGbuffers):
 
 infodict = dict()
 infodict[ "sky"  ]  = [70, 130, 180, 23   ]
-infodict[ "road"  ]  = [7128, 64, 128, 7  ]
+infodict[ "road"  ]  = [128, 64, 128, 7  ]
 infodict[ "static"  ]  = [110, 190, 160, 8   ]
 infodict[ "sidewalk"  ]  = [244, 35, 232 , 9   ]
 infodict[ "vehicle"  ]  = [0, 0, 142 , 26   ]

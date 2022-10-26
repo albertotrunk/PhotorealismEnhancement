@@ -166,6 +166,7 @@ class BatchNormWrapper(nn.BatchNorm2d):
 		super(BatchNormWrapper, self).__init__(*args, **kwargs)
 
 	def forward(self, x, _):
+		x = x + epsilon
 		return super().forward(x)
 
 
@@ -254,5 +255,5 @@ class GBufferConv(nn.Module):
 		if self._conv is not None:
 			g = self._conv(g)
 			pass
-
+		x = x + epsilon
 		return x  * (1- 0.1 * self._scale(g)) + 0.1 * self._bias(g)

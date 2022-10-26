@@ -12,7 +12,7 @@ base = Path (os.path.dirname(os.path.realpath(__file__)))
 
 print(base)
 
-for  daatsetName in ["Carla"  ,"A2d2"  ]:
+for  daatsetName in ["Carla"]:#["PFD"  ,"A2d2"  ]:
 
     #daatsetName = "Carla"
     imageextention = '.png'

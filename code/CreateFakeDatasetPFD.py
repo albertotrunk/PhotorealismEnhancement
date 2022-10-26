@@ -16,6 +16,9 @@ basedataset = "/home/aitester/Datasets/PFD/"
 sorceimagesFoldersList = [  basedataset+file+"/images"  for file in os.listdir(basedataset)  if os.path.isdir(basedataset+file+"/images" )   ]
 ground_truth_label_map = [  basedataset+file+"/labels"  for file in os.listdir(basedataset)  if os.path.isdir(basedataset+file+"/labels" )   ]
 
+sorceimagesFoldersList.sort()
+ground_truth_label_map.sort()
+
 daatsetName = "PFD"
 imageextention = '.png'
 

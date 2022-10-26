@@ -26,7 +26,7 @@ real_dataset:
   filelist: /home/aitester/PycharmProjects/PhotorealismEnhancement/data/A2d2/A2d2.txt # file with path to image in each line.
 
 fake_dataset: 
-  name: GTA
+  name: Carla
   train_filelist: /home/aitester/PycharmProjects/PhotorealismEnhancement/data/Carla/Carla.txt # file with paths to image, gbuffers, robust labels, and gt labels (for deriving material segmentation) in each line.
   val_filelist:   /home/aitester/PycharmProjects/PhotorealismEnhancement/data/Carla/Carla.txt # see above
   test_filelist:  /home/aitester/PycharmProjects/PhotorealismEnhancement/data/Carla/Carla.txt # see above

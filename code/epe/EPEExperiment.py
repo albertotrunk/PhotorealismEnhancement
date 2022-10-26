@@ -23,12 +23,14 @@ import epe.dataset as ds
 import epe.network as nw
 import epe.experiment as ee
 from epe.matching import MatchedCrops, IndependentCrops
+epsilon=1e-08
 
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
 
 logger = logging.getLogger('main')
 
+torch.autograd.set_detect_anomaly(True)
 
 gan_losses = {\
 	'ls':nw.LSLoss,
@@ -60,7 +62,7 @@ dataset_pairings = [\
 ]
 
 def tee_loss(x, y):
-	return x+y, y.detach()
+	return x+y+epsilon, y.detach()
 
 
 def accuracy(pred):
@@ -234,7 +236,7 @@ class EPEExperiment(ee.GANExperiment):
 			vgg=self.vgg, img=rec_fake, robust_labels=batch_fake.robust_labels, 
 			fix_input=False, run_discs=True)
 
-		loss     = 0
+		loss     =  epsilon
 		log_info = {}
 		for i, rm in enumerate(realism_maps):
 			loss, log_info[f'gs{i}'] = tee_loss(loss, self.gan_loss.forward_gen(rm[0,:,:,:].unsqueeze(0)).mean())
