@@ -17,6 +17,8 @@ import sys
 import time
 from subprocess import call
 import subprocess
+import shutil
+
 try:
     sys.path.append(glob.glob('/opt/carla-simulator/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
@@ -34,6 +36,11 @@ from carla import VehicleLightState as vls
 import argparse
 import logging
 from numpy import random
+
+
+IM_width = 960
+IM_Hight = 540
+
 
 def get_actor_blueprints(world, filter, generation):
     bps = world.get_blueprint_library().filter(filter)
@@ -59,7 +66,7 @@ def get_actor_blueprints(world, filter, generation):
         print("   Warning! Actor Generation is not valid. No actor will be spawned.")
         return []
 
-def main():
+def main(index = 0):
 
 
     argparser = argparse.ArgumentParser(
@@ -160,10 +167,12 @@ def main():
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+	
 
+	
     #os.system("/opt/carla-simulator/CarlaUE4.sh -RenderOffScreen")
     #call(["/opt/carla-simulator/CarlaUE4.sh", ""])#-RenderOffScreen
-    subprocess.Popen(["/opt/carla-simulator/CarlaUE4.sh" ] )
+    subprocess.Popen(["/opt/carla-simulator/CarlaUE4.sh", "-RenderOffScreen" ] )
 
     time.sleep(30)
 
@@ -191,8 +200,7 @@ def main():
 
         vehicle.set_autopilot(True)
 
-        IM_width = 1920
-        IM_Hight = 1080
+
         fov = 105
         # camera_bp = blueprint_library.find('sensor.camera.rgb')
         #camera_bp = blueprint_library.find('sensor.camera.semantic_segmentation')
@@ -214,7 +222,7 @@ def main():
         # receives an image. In this example we are saving the image to disk
         # converting the pixels to gray-scale.
         # cc = carla.ColorConverter.LogarithmicDepth
-        camera.listen(lambda image: image.save_to_disk('_out/semantic_segmentation/%06d.png' % image.frame,
+        camera.listen(lambda image: image.save_to_disk(f'_out/semantic_segmentation/{index}_%06d.png' % image.frame,
                                                        carla.ColorConverter.CityScapesPalette))
 
         camera_bp = blueprint_library.find('sensor.camera.rgb')
@@ -233,7 +241,7 @@ def main():
         # receives an image. In this example we are saving the image to disk
         # converting the pixels to gray-scale.
         # cc = carla.ColorConverter.LogarithmicDepth
-        camera.listen(lambda image: image.save_to_disk('_out/rgb/%06d.png' % image.frame))
+        camera.listen(lambda image: image.save_to_disk(f'_out/rgb/{index}_%06d.png' % image.frame))
 
         camera_bp = blueprint_library.find('sensor.camera.depth')
         camera_bp.set_attribute("image_size_x", f"{IM_width}")
@@ -250,7 +258,7 @@ def main():
         # receives an image. In this example we are saving the image to disk
         # converting the pixels to gray-scale.
         # cc = carla.ColorConverter.LogarithmicDepth
-        camera.listen(lambda image: image.save_to_disk('_out/depth/%06d.png' % image.frame))
+        camera.listen(lambda image: image.save_to_disk(f'_out/depth/{index}_%06d.png' % image.frame))
 
         # Let's add now a "depth" camera attached to the vehicle. Note that the
         # transform we give here is now relative to the vehicle.
@@ -472,4 +480,83 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+
+	allOk = False
+	i =0
+	
+	rgb_target  = "/home/aitester/Datasets/Carla/rgb"
+	semantic_target = "/home/aitester/Datasets/Carla/semantic_segmentation"
+	depth_target = "/home/aitester/Datasets/Carla/depth"
+
+
+	if not os.path.exists(rgb_target):
+		os.makedirs(rgb_target)
+
+
+	if not os.path.exists(semantic_target):
+		os.makedirs(semantic_target)
+
+
+	if not os.path.exists(depth_target):
+		os.makedirs(depth_target)
+	
+	targetFilels = 1000
+	
+	while  not allOk:
+		i = i+1
+		main(i)
+		
+		out_rgp = f'./_out/rgb'
+		out_semantic = f'./_out/rgb'		
+		out_depth = f'./_out/rgb'
+
+		filelist_rgp = [file for file in os.listdir(out_rgp) ]	
+		for file in filelist_rgp:
+            path1 = os.path.join(out_semantic , file)
+            path2 = os.path.join(out_depth , file)
+			if os.path.exists(path1) and os.path.exists(path2):
+				pass #all Ok
+			else:
+				os.remove(os.path.join(out_rgp , file))
+			
+				
+		filelist_semantic = [file for file in os.listdir(out_semantic) ]
+		for file in filelist_semantic:
+            path1 = os.path.join(out_rgp , file)
+            path2 = os.path.join(out_depth , file)
+			if os.path.exists(path1) and os.path.exists(path2):
+				pass #all Ok
+			else:
+				os.remove(os.path.join(out_semantic , file))				
+				
+ 
+		filelist_rgp = [file for file in os.listdir(out_rgp) ]	
+		for file in filelist_rgp:
+			current = os.path.join(out_rgp , file)
+			destination = os.path.join(rgb_target , file)
+			shutil.move(current, destination)
+
+		filelist_semantic = [file for file in os.listdir(out_semantic) ]	
+		for file in filelist_semantic:
+			current = os.path.join(out_semantic , file)
+			destination = os.path.join(semantic_target , file)
+			shutil.move(current, destination)
+				
+
+		filelist_depth = [file for file in os.listdir(out_depth) ]	
+		for file in filelist_depth:
+			current = os.path.join(out_depth , file)
+			destination = os.path.join(depth_target , file)
+			shutil.move(current, destination)
+			
+			
+		
+		filelist_rgb_target = [file for file in  ]	
+		
+		if len(os.listdir(rgb_target)) >= targetFilels:
+			allOk = True
+			break
+		
+		
+		
+		
