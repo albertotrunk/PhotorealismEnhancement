@@ -22,7 +22,6 @@ class FeedForwardExperiment(BaseExperiment):
 	def __init__(self, args):
 		"""Common set up code for all actions."""
 		super(FeedForwardExperiment, self).__init__(args)
-		pass
 
 
 	@property
@@ -43,7 +42,6 @@ class FeedForwardExperiment(BaseExperiment):
 		
 		o = make_optimizer(self.network.params(), self.args)
 		self.state  = NetworkState(self.network, o, make_scheduler(o, args), args)
-		pass
 
 	
 	def _train_network(self, batch, i):
@@ -56,23 +54,19 @@ class FeedForwardExperiment(BaseExperiment):
 
 	def _run_network(self, batch, i):
 		raise NotImplementedError
-		return []
 
 
 	def evaluate_test(self, batch, batch_id):
 		raise NotImplementedError
-		pass
 
 
 	def evaluate_infer(self, sample):
 		raise NotImplementedError
-		pass
 
 
 	def _load_sample(self):
 		""" Loads a single example (preferably from self.args.input). """
 		raise NotImplementedError
-		return batch
 
 
 	def _save_model(self, *, epochs=None, iterations=None, suffix=None):
@@ -82,25 +76,23 @@ class FeedForwardExperiment(BaseExperiment):
 		suffix = f'-{iterations}{suffix}' if iterations is not None else suffix
 
 		base_filename = self.args.weight_dir / f'{self.args.weight_save}{suffix}'
-	
+
 		self.log.info(f'Saving model to {base_filename}.')
-		torch.save(self.state.save_to_dict(), f'{base_filename}.pth.tar')		
-		pass
+		torch.save(self.state.save_to_dict(), f'{base_filename}.pth.tar')
 
 
 	def _load_model(self):
 		base_filename = self.args.weight_dir / f'{self.args.weight_init}'
 		savegame = torch.load(f'{base_filename}.pth.tar')
 		self.state.load_from_dict(savegame)
-		pass
 
 
 	def validate(self,i):
 		if len(self.dataset_fake_val) > 0:
 			torch.cuda.empty_cache()
 			loader_fake = torch.utils.data.DataLoader(self.dataset_fake_val, \
-				batch_size=1, shuffle=False, \
-				num_workers=self.args.num_loaders, pin_memory=True, drop_last=False, worker_init_fn=seed_worker)
+					batch_size=1, shuffle=False, \
+					num_workers=self.args.num_loaders, pin_memory=True, drop_last=False, worker_init_fn=seed_worker)
 
 			self.network.eval()
 
@@ -115,21 +107,16 @@ class FeedForwardExperiment(BaseExperiment):
 					del batch_fake
 					self.dump_val(i, bi, gen_vars)
 					del gen_vars
-					pass
-				pass
-
 			self.network.train()
 
 			toggle_grad(self.network.generator, False)
 			toggle_grad(self.network.discriminator, True)
 
-			del loader_fake			
+			del loader_fake
 			#del gen_vars
 			torch.cuda.empty_cache()
-			pass
 		else:
 			self.log.warning('Validation set is empty - Skipping validation.')
-		pass
 
 
 	
@@ -138,42 +125,32 @@ class FeedForwardExperiment(BaseExperiment):
 	def dbg(self):
 		"""Test a network on a dataset."""
 		self.loader_fake = torch.utils.data.DataLoader(self.dataset_fake_val, \
-			batch_size=3, shuffle=False, \
-			num_workers=4, pin_memory=True, drop_last=False, worker_init_fn=seed_worker)
+				batch_size=3, shuffle=False, \
+				num_workers=4, pin_memory=True, drop_last=False, worker_init_fn=seed_worker)
 
 		if self.args.weight_init:
 			self._load_model()
-			pass
-
 		self.network.eval()
 		with torch.no_grad():
 			for bi, batch_fake in enumerate(self.loader_fake):
 				batch_fake = [f.to(self.device, non_blocking=True) for f in batch_fake[:-1]]
 				_, gen_vars = self.evaluate_dbg(batch_fake)
 				self.dump(bi, gen_vars, {}, True)
-				pass
-			pass
-		pass
 
 	def test(self):
 		"""Test a network on a dataset."""
 		self.loader_fake = torch.utils.data.DataLoader(self.dataset_fake_val, \
-			batch_size=1, shuffle=(self.args.shuffle_test), \
-			num_workers=self.args.num_loaders, pin_memory=True, drop_last=False, worker_init_fn=seed_worker)
+				batch_size=1, shuffle=(self.args.shuffle_test), \
+				num_workers=self.args.num_loaders, pin_memory=True, drop_last=False, worker_init_fn=seed_worker)
 
 		if self.args.weight_init:
 			self._load_model()
-			pass
-
 		self.network.eval()
 		with torch.no_grad():
 			for bi, batch_fake in enumerate(self.loader_fake):                
 				print('batch %d' % bi)
 				batch_fake = [f.to(self.device, non_blocking=True) for f in batch_fake[:-1]]
 				self.save_result(self.evaluate_test(batch_fake, bi), bi)
-				pass
-			pass
-		pass
 
 
 	def infer(self):
@@ -181,13 +158,9 @@ class FeedForwardExperiment(BaseExperiment):
 
 		if self.args.weight_init:
 			self._load_model()
-			pass
-
 		self.network.train()
 		# with torch.no_grad():
 		self.evaluate_infer(self._load_sample())
-			# pass
-		pass
 
 	@classmethod
 	def add_arguments(cls, parser):
@@ -210,7 +183,6 @@ class FeedForwardExperiment(BaseExperiment):
 
 	def run(self):
 		self.__getattribute__(self.args.action)()
-		pass
 	
 
 # if __name__ == '__main__':

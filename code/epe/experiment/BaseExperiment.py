@@ -14,14 +14,11 @@ import yaml
 def seed_worker(id):
 	random.seed(torch.initial_seed() % np.iinfo(np.int32).max)
 	np.random.seed(torch.initial_seed() % np.iinfo(np.int32).max)
-	pass
 
 
 def toggle_grad(model, requires_grad):
 	for p in model.parameters():
 		p.requires_grad_(requires_grad)
-		pass
-	pass
 
 
 _logstr2level = {
@@ -63,7 +60,6 @@ class NetworkState:
 		self.iterations         = 0
 
 		self._parse_config(cfg)
-		pass
 
 
 	def _parse_config(self, cfg):
@@ -72,7 +68,6 @@ class NetworkState:
 		self._init_scheduler(dict(cfg.get('scheduler', {})))
 
 		self.learning_rate = self.scheduler.get_last_lr()
-		pass
 
 
 	def _init_optimizer(self, cfg):
@@ -114,26 +109,23 @@ class NetworkState:
 		else:
 			raise NotImplementedError
 
-		pass
-
 
 	def _init_scheduler(self, cfg):
 
 		scheduler  = str(cfg.get('scheduler', 'step'))
 		step       = int(cfg.get('step', 1000000))
 		step_gamma = float(cfg.get('step_gamma', 1))
-			
+
 		if scheduler == 'step':
 			self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=step, gamma=step_gamma)
-			
+
 		elif scheduler == 'exp':
 			# will produce  a learning rate of step_gamma at step
 			gamma = step_gamma**(1.0/step)
 			self.scheduler = torch.optim.lr_scheduler.ExponentialLR(self.optimizer,  gamma=gamma)
-			
+
 		elif scheduler == 'cosine':			
-			self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer,  T_max=step, eta_min=self.learning_rate*step_gamma)		
-		pass
+			self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer,  T_max=step, eta_min=self.learning_rate*step_gamma)
 
 
 	def load_from_dict(self, d):
@@ -145,7 +137,6 @@ class NetworkState:
 		# self._log.warn('NOT LOADING scheduler HERE')
 		self.scheduler.load_state_dict(d['scheduler'])
 		self.iterations = d.get('iterations', 0)
-		pass
 
 
 	def save_to_dict(self):
@@ -160,7 +151,6 @@ class NetworkState:
 
 	def prepare(self):
 		self.optimizer.zero_grad(set_to_none=True)
-		pass
 
 
 	def update(self):
@@ -170,25 +160,17 @@ class NetworkState:
 			n = torch.nn.utils.clip_grad_norm_(self.network.parameters(), self.clip_gradient_norm, norm_type='inf')
 			if self._log.isEnabledFor(logging.DEBUG):
 				self._log.debug(f'gradient norm: {n}')
-			pass
-
-		self.optimizer.step()						
+		self.optimizer.step()
 		self.scheduler.step()
 		lr = self.scheduler.get_last_lr()
 
 		if lr != self.learning_rate:
 			self._log.info(f'Learning rate set to {lr}.')
 			self.learning_rate = lr
-			pass
-
 		if self.clip_weights > 0:
 			for p in self.network.parameters():
 				p.data.clamp_(-self.clip_weights, self.clip_weights)
-				pass
-			pass
-				
 		self.iterations += 1
-		pass
 	pass
 
 
@@ -206,11 +188,7 @@ class LogSync:
 		for k,v in scalars.items():
 			if k not in self._scalar_queue:
 				self._scalar_queue[k] = {}
-				pass
-
 			self._scalar_queue[k][i] = v.to('cpu', non_blocking=True)
-			pass
-		pass
 
 	# def _update_gpu(self, scalars):
 	# 	for k,v in scalars.items():
@@ -227,9 +205,7 @@ class LogSync:
 
 		if i % (20*self._log_interval) == 0:
 			line = [f'{i:d} ']
-			for t in self._scalar_queue.keys():
-				line.append('%-4.4s ' % t)
-				pass
+			line.extend('%-4.4s ' % t for t in self._scalar_queue.keys())
 			self._log.info('')
 			self._log.info(''.join(line))
 
@@ -241,21 +217,14 @@ class LogSync:
 			# Loss infos
 			new_queue = {}
 			for k,v in self._scalar_queue.items():
-				valid = {j:float(vj) for j,vj in v.items() if i - j >= self._delay}
-				if valid:
+				if valid := {j: float(vj) for j, vj in v.items() if i - j >= self._delay}:
 					vv = valid.values()
 					line.append(f'{sum(vv)/len(vv):.2f} ')
-					for vk in valid.keys():
+					for vk in valid:
 						del v[vk]
-						pass
-					pass
 				else:
 					line.append('---- ')
-					pass				
-				pass
-
-			self._log.info(''.join(line))			
-			pass
+			self._log.info(''.join(line))
 
 
 class BaseExperiment:
@@ -274,7 +243,7 @@ class BaseExperiment:
 	def __init__(self, args):
 		"""Common set up code for all actions."""
 		self.action       = args.action
-		self._log         = logging.getLogger('main')		
+		self._log         = logging.getLogger('main')
 		self.no_safe_exit = args.no_safe_exit
 		self.collate_fn_train = None
 		self.collate_fn_val   = None
@@ -294,22 +263,18 @@ class BaseExperiment:
 
 		if self.seed is not None:
 			torch.manual_seed(self.seed)
-			pass
-		pass
 
 
 	def _load_config(self, config_path):
 		with open(config_path) as file:
 			self.cfg = yaml.safe_load(file)
-			pass
-		pass
 
 
 	def _parse_config(self):
 
 		common_cfg = dict(self.cfg.get('common', {}))
 		self.unpin           = bool(common_cfg.get('unpin', False))
-		self.seed            = common_cfg.get('seed', None)
+		self.seed = common_cfg.get('seed')
 		self.batch_size      = int(common_cfg.get('batch_size', 1))
 		self.num_loaders     = int(common_cfg.get('num_loaders', 10))
 		self._log_interval   = int(common_cfg.get('log_interval', 1))
@@ -330,8 +295,8 @@ class BaseExperiment:
 
 		self.shuffle_test    = bool(self.cfg.get('shuffle_test', False))
 		self.shuffle_train   = bool(self.cfg.get('shuffle_train', True))
-		
-		self.weight_dir      = Path(self.cfg.get('weight_dir', './savegames/'))		
+
+		self.weight_dir      = Path(self.cfg.get('weight_dir', './savegames/'))
 		self.weight_init     = self.cfg.get('name_load', None)
 		self.dbg_dir         = Path(self.cfg.get('out_dir', './out/'))
 		self.result_ext      = '.jpg' 
@@ -342,7 +307,7 @@ class BaseExperiment:
 
 		train_cfg = dict(self.cfg.get('train', {}))
 		self.max_epochs      = int(train_cfg.get('max_epochs', -1))
-		self.max_iterations  = int(train_cfg.get('max_iterations', -1))		
+		self.max_iterations  = int(train_cfg.get('max_iterations', -1))
 		self.save_epochs     = int(train_cfg.get('save_epochs', -1))
 		self.save_iterations = int(train_cfg.get('save_iterations', 100000))
 		self.weight_save     = str(train_cfg.get('name_save', 'model'))
@@ -350,14 +315,13 @@ class BaseExperiment:
 		self.val_interval    = int(train_cfg.get('val_interval', 20000))
 
 
-		self._log.debug(f'  training config:')
+		self._log.debug('  training config:')
 		self._log.debug(f'    max_epochs      : {self.max_epochs}')
 		self._log.debug(f'    max_iterations  : {self.max_iterations}')
-		self._log.debug(f'    name_save       : {self.weight_save}')		
+		self._log.debug(f'    name_save       : {self.weight_save}')
 		self._log.debug(f'    save_epochs     : {self.save_epochs}')
 		self._log.debug(f'    save_iterations : {self.save_iterations}')
 		self._log.debug(f'    validation      : {"off" if self.no_validation else f"every {self.val_interval}"}')
-		pass
 		
 
 	@property
@@ -370,7 +334,6 @@ class BaseExperiment:
 		self.dbg_dir.mkdir(parents=True, exist_ok=True)
 		(self.dbg_dir / self.weight_save).mkdir(parents=True, exist_ok=True)
 		self.weight_dir.mkdir(parents=True, exist_ok=True)
-		pass
 
 
 	def _init_network(self):
@@ -396,10 +359,7 @@ class BaseExperiment:
 		if self.max_epochs > 0 and e >= self.max_epochs:
 			return True
 
-		if self.max_iterations > 0 and i >= self.max_iterations:
-			return True
-
-		return False
+		return self.max_iterations > 0 and i >= self.max_iterations
 
 
 	def _should_save_epoch(self, e):
@@ -412,24 +372,21 @@ class BaseExperiment:
 
 	def _dump(self, img_vars, other_vars={}, force=False):
 		if force or ((self.i // 1000) % 5 == 0 and (self.i % 100 == 0)) or (self.i < 20000 and self.i % 100 == 0):
-			d1 = {('i_%s' % k):v for k,v in img_vars.items() if v is not None}			
-			d2 = {('o_%s' % k):v for k,v in other_vars.items()}
-			self.save_dbg({**d1, **d2}, '%d' % self.i)
+			d1 = {f'i_{k}': v for k,v in img_vars.items() if v is not None}
+			d2 = {f'o_{k}': v for k,v in other_vars.items()}
+			self.save_dbg(d1 | d2, '%d' % self.i)
 
 	def evaluate_test(self, batch, batch_id):
 		raise NotImplementedError
-		pass
 
 
 	def evaluate_infer(self, sample):
 		raise NotImplementedError
-		pass
 
 
 	def _load_sample(self):
 		""" Loads a single example (preferably from self.args.input). """
 		raise NotImplementedError
-		return batch
 
 
 	def _save_model(self, *, epoch=None, iterations=None, reason=None):
@@ -455,34 +412,30 @@ class BaseExperiment:
 
 
 	def dump_val(self, i, batch_id, img_vars):
-		d = {('i_%s' % k):v for k,v in img_vars.items()}
+		d = {f'i_{k}': v for k,v in img_vars.items()}
 		self.save_dbg(d, 'val_%d_%d' % (i,batch_id))
-		pass
 	
 
 	def save_dbg(self, d, name=None):
 		if name is None:
 			name = 'dbg_%d' % self._save_id
 			self._save_id += 1
-			pass
 		savemat(self.dbg_dir / self.weight_save / f'{name}.mat', \
-			{k:d[k].detach().to('cpu').numpy() for k in d.keys()}, do_compression=True)
-		pass
+				{k:d[k].detach().to('cpu').numpy() for k in d.keys()}, do_compression=True)
 
 
 	def save_result(self, d, id):
 		name = 'result_%d' % id
 		savemat(self.dbg_dir / self.weight_save / f'{name}.mat', \
-			{k:v.detach().cpu().numpy() for k,v in d.items()}, do_compression=True)
-		pass
+				{k:v.detach().cpu().numpy() for k,v in d.items()}, do_compression=True)
 
 
 	def validate(self):
 		if len(self.dataset_fake_val) > 0:
 			torch.cuda.empty_cache()
 			loader_fake = torch.utils.data.DataLoader(self.dataset_fake_val, \
-				batch_size=1, shuffle=False, \
-				num_workers=self.num_loaders, pin_memory=True, drop_last=False, collate_fn=self.collate_fn_val, worker_init_fn=seed_worker)
+					batch_size=1, shuffle=False, \
+					num_workers=self.num_loaders, pin_memory=True, drop_last=False, collate_fn=self.collate_fn_val, worker_init_fn=seed_worker)
 
 			self.network.eval()
 
@@ -492,44 +445,37 @@ class BaseExperiment:
 			with torch.no_grad():
 				for bi, batch_fake in enumerate(loader_fake):
 					# last item of batch_fake is just index
-					
+
 					gen_vars = self._forward_generator_fake(batch_fake.to(self.device), i)
 					del batch_fake
 					self.dump_val(i, bi, gen_vars)
 					del gen_vars
-					pass
-				pass
-
 			self.network.train()
 
 			toggle_grad(self.network.generator, False)
 			toggle_grad(self.network.discriminator, True)
 
-			del loader_fake			
+			del loader_fake
 			#del gen_vars
 			torch.cuda.empty_cache()
-			pass
 		else:
 			self._log.warning('Validation set is empty - Skipping validation.')
-		pass
 
 
 	def train(self):
 		"""Train a network."""
 
 		self.loader = torch.utils.data.DataLoader(self.dataset_train, \
-			batch_size=self.batch_size, shuffle=self.shuffle_train, \
-			num_workers=self.num_loaders, pin_memory=(not self.unpin), drop_last=True, collate_fn=self.collate_fn_train, worker_init_fn=seed_worker)
+				batch_size=self.batch_size, shuffle=self.shuffle_train, \
+				num_workers=self.num_loaders, pin_memory=(not self.unpin), drop_last=True, collate_fn=self.collate_fn_train, worker_init_fn=seed_worker)
 
 		if self.weight_init is not None:
 			self._load_model()
-			pass
-
 		self.network.train()
 
 		e = 0
 
-		
+
 		try:
 			# with torch.profiler.profile(
 			# 	activities=[torch.profiler.ProfilerActivity.CPU,torch.profiler.ProfilerActivity.CUDA],
@@ -538,7 +484,7 @@ class BaseExperiment:
    #      		record_shapes=False,
    #      		profile_memory=self._profile_memory,
    #      		with_stack=True) as self._profiler:
-			# with torch.autograd.profiler.profile(enabled=self._profile, use_cuda=self._profile_gpu, profile_memory=self._profile_memory, with_stack=self._profile_stack) as prof:		
+			# with torch.autograd.profiler.profile(enabled=self._profile, use_cuda=self._profile_gpu, profile_memory=self._profile_memory, with_stack=self._profile_stack) as prof:
 			while not self._should_stop(e, self.i):
 				for batch in self.loader:
 					if self._should_stop(e, self.i):
@@ -547,62 +493,44 @@ class BaseExperiment:
 					log_scalar, log_img = self._train_network(batch.to(self.device))
 					if self._log.isEnabledFor(logging.DEBUG):
 						self._log.debug(f'GPU memory allocated: {torch.cuda.memory_allocated(device=self.device)}')
-						pass
-					
 					self._log_sync.update(self.i, log_scalar)
 
 					self._dump({**log_img}, force=self._log.isEnabledFor(logging.DEBUG))
 					del log_img
 					del batch
-					
+
 					self._log_sync.print(self.i)
-					
+
 
 					if self._should_save_iteration(self.i):
 						self._save_model(iterations=self.i)
-						pass
-
 					if self.i > 0 and self.i % self.val_interval == 0:
 						self.validate()
-						pass
-					pass
-					
 				e += 1
 
 				if self._should_save_epoch(e):
 					self._save_model(epochs=e)
-					pass
-				pass
-			pass
 		except:
 			if not self.no_safe_exit:
 				self._save_model(iterations=self.i, reason='break')
-				pass
-
 			self._log.error(f'Unexpected error: {sys.exc_info()[0]}')
 			raise
-		pass
 
 
 	def test(self):
 		"""Test a network on a dataset."""
 		self.loader_fake = torch.utils.data.DataLoader(self.dataset_fake_val, \
-			batch_size=1, shuffle=(self.shuffle_test), \
-			num_workers=self.num_loaders, pin_memory=True, drop_last=False, collate_fn=self.collate_fn_val, worker_init_fn=seed_worker)
+				batch_size=1, shuffle=(self.shuffle_test), \
+				num_workers=self.num_loaders, pin_memory=True, drop_last=False, collate_fn=self.collate_fn_val, worker_init_fn=seed_worker)
 
 		if self.weight_init is not None:
 			self._load_model()
-			pass
-
 		self.network.eval()
 		with torch.no_grad():
 			for bi, batch_fake in enumerate(self.loader_fake):                
 				print('batch %d' % bi)
 				batch_fake = [f.to(self.device, non_blocking=True) for f in batch_fake[:-1]]
 				self.save_result(self.evaluate_test(batch_fake, bi), bi)
-				pass
-			pass
-		pass
 
 
 	def infer(self):
@@ -610,28 +538,22 @@ class BaseExperiment:
 
 		if self.weight_init is not None:
 			self._load_model()
-			pass
-
 		self.network.train()
 		# with torch.no_grad():
 		self.evaluate_infer(self._load_sample())
-			# pass
-		pass
 
 
 	@classmethod
 	def add_arguments(cls, parser):
 		# methods available at command line 
-		
+
 		parser.add_argument('action', type=str, choices=cls.actions)
 		parser.add_argument('config', type=Path, help='Path to config file.')
 		parser.add_argument('-log', '--log', type=str, default='info', choices=_logstr2level.keys())
 		parser.add_argument('--log_dir', type=Path, default='./log/', help='Directory for log files.')
 		parser.add_argument('--gpu', type=int, default=0, help='ID of GPU. Use -1 to run on CPU. Default: 0')
 		parser.add_argument('--no_safe_exit', action='store_true', default=False, help='Do not save model if anything breaks.')
-		pass
 
 	
 	def run(self):
 		self.__getattribute__(self.action)()
-		pass

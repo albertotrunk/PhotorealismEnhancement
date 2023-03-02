@@ -30,16 +30,12 @@ def make_conv_layer(dims, strides=1, leaky_relu=True, spectral=False, norm_facto
 
 	if type(strides) == int:
 		strides = [strides] + [1] * (len(dims)-2)
-		pass
-
 	c = nn.Conv2d(dims[0], dims[1], kernel, stride=strides[0], bias=spectral)
 	m = [] if kernel == 1 else [nn.ReplicationPad2d(kernel // 2)]
-	m += [c if not spectral else torch.nn.utils.spectral_norm(c)]
+	m += [torch.nn.utils.spectral_norm(c) if spectral else c]
 
 	if norm_factory:
 		m += [norm_factory(dims[1])]
-		pass
-
 	m += [nn.LeakyReLU(0.2, inplace=True) if leaky_relu else nn.ReLU(inplace=True)]
 
 	num_convs = len(dims)-2
@@ -48,18 +44,14 @@ def make_conv_layer(dims, strides=1, leaky_relu=True, spectral=False, norm_facto
 
 		if kernel > 1:
 			m += [nn.ReplicationPad2d(kernel // 2)]
-		m += [c if not spectral else torch.nn.utils.spectral_norm(c)]
-		
+		m += [torch.nn.utils.spectral_norm(c) if spectral else c]
+
 		if norm_factory:
 			m += [norm_factory(di)]
-			pass
-		
 		if i == num_convs-1 and skip_final_relu:
 			continue
 		else:
 			m += [nn.LeakyReLU(0.2, inplace=True) if leaky_relu else nn.ReLU(inplace=True)]
-		pass
-
 	return nn.Sequential(*m)
 
 
@@ -69,9 +61,8 @@ class ResBlock(nn.Module):
 
 		self.conv = make_conv_layer(dims, first_stride, leaky_relu, spectral, norm_factory, True, kernel=kernel)
 		self.down = make_conv_layer([dims[0], dims[-1]], first_stride, leaky_relu, spectral, None, True, kernel=kernel) \
-			if first_stride != 1 or dims[0] != dims[-1] else None
+				if first_stride != 1 or dims[0] != dims[-1] else None
 		self.relu = nn.LeakyReLU(0.2, inplace=True) if leaky_relu else nn.ReLU(inplace=True)
-		pass
 
 	def forward(self, x):
 		x = x+epsilon
@@ -84,9 +75,8 @@ class Res2Block(nn.Module):
 
 		self.conv = make_conv_layer(dims, first_stride, leaky_relu, False, None, False, kernel=3)
 		self.down = make_conv_layer([dims[0], dims[-1]], first_stride, leaky_relu, False, None, True, kernel=1) \
-			if first_stride != 1 or dims[0] != dims[-1] else None
+				if first_stride != 1 or dims[0] != dims[-1] else None
 		self.relu = nn.LeakyReLU(0.2, inplace=True) if leaky_relu else nn.ReLU(inplace=True)
-		pass
 
 	def forward(self, x):
 		x = x + epsilon
@@ -104,7 +94,6 @@ class BottleneckBlock(nn.Module):
 		self._norm2 = nn.GroupNorm(dim_mid)
 		self._norm3 = nn.GroupNorm(dim_out)
 		self._down  = nn.Conv2d(dim_in, dim_out, 1, stride=stride) if stride > 1 or dim_in != dim_out else None
-		pass
 
 	def forward(self, x):
 		r = x if self_down is None else self._down(x)
@@ -132,7 +121,6 @@ class ResnextBlock(nn.Module):
 		self._norm2 = nn.GroupNorm(groups, dim_mid)
 		self._norm3 = nn.GroupNorm(groups, dim_out)
 		self._down  = nn.Conv2d(dim_in, dim_out, 1, stride=stride) if stride > 1 or dim_in != dim_out else None
-		pass
 
 	def forward(self, x):
 		r = x if self._down is None else self._down(x)

@@ -27,11 +27,8 @@ class RobustlyLabeledDataset(ImageDataset):
 			lab_path = Path(lab_path)
 
 			if img_path.is_file() and img_path.suffix in ['.jpg', '.png'] and \
-				lab_path.is_file() and lab_path.suffix == '.png':
+					lab_path.is_file() and lab_path.suffix == '.png':
 				self._img2label[img_path] = lab_path
-				pass
-			pass
-
 		self.paths           = sorted(self._img2label.keys())
 		self._path2id        = {p.stem:i for i,p in enumerate(self.paths)}
 		self.transform       = img_transform
@@ -41,8 +38,6 @@ class RobustlyLabeledDataset(ImageDataset):
 		self._log.info(f'Found {len(self.paths)} images.')
 		if len(self.paths) < 1:
 			self._log.warn('Dataset is empty!')
-			pass
-		pass
 
 
 	def get_id(self, img_filename):
@@ -58,8 +53,6 @@ class RobustlyLabeledDataset(ImageDataset):
 
 		if self.transform is not None:
 			img = self.transform(img)
-			pass
-
 		img = mat2tensor(img)
 
 		label_path    = self._img2label[img_path]
@@ -67,8 +60,6 @@ class RobustlyLabeledDataset(ImageDataset):
 
 		if self.label_transform is not None:
 			robust_labels = self.label_transform(robust_labels)
-			pass
-
 		robust_labels = torch.LongTensor(robust_labels).unsqueeze(0)
 
 		return EPEBatch(img, path=img_path, robust_labels=robust_labels)

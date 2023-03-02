@@ -74,15 +74,20 @@ def real_penalty(loss, real_img):
 	b = real_img.shape[0]
 	grad_out = autograd.grad(outputs=loss, inputs=[real_img], create_graph=True, retain_graph=True, only_inputs=True, allow_unused=True)
 	logger.debug(f'real_penalty: g:{grad_out[0].shape}')
-	reg_loss = torch.cat([g.pow(2).reshape(b, -1).sum(dim=1, keepdim=True) for g in grad_out if g is not None], 1).mean()
-	return reg_loss
+	return torch.cat(
+		[
+			g.pow(2).reshape(b, -1).sum(dim=1, keepdim=True)
+			for g in grad_out
+			if g is not None
+		],
+		1,
+	).mean()
 
 
 class PassthruGenerator(torch.nn.Module):
 	def __init__(self, network):
 		super(PassthruGenerator, self).__init__()
 		self.network = network
-		pass
 
 	def forward(self, epe_batch):
 		return self.network(epe_batch)
@@ -93,7 +98,6 @@ class EPEExperiment(ee.GANExperiment):
 		super(EPEExperiment, self).__init__(args)
 		self.collate_fn_train = ds.JointEPEBatch.collate_fn
 		self.collate_fn_val   = ds.EPEBatch.collate_fn
-		pass
 
 
 	def _parse_config(self):
@@ -144,7 +148,6 @@ class EPEExperiment(ee.GANExperiment):
 
 		reg_cfg = dict(loss_cfg.get('reg', {}))
 		self.reg_weight = float(reg_cfg.get('weight', 1.0))
-		pass
 
 
 	def _init_dataset(self):
@@ -158,8 +161,6 @@ class EPEExperiment(ee.GANExperiment):
 			self.dataset_fake_val = fake_datasets[self.fake_name](ds.utils.read_filelist(self.fake_test_path, 4, True))
 		else:
 			self.dataset_fake_val = fake_datasets[self.fake_name](ds.utils.read_filelist(self.fake_val_path, 4, True))
-			pass
-
 		# training
 
 		if self.action == 'train':
@@ -174,10 +175,8 @@ class EPEExperiment(ee.GANExperiment):
 				self.dataset_train = IndependentCrops(source_dataset, target_dataset, self.sample_cfg)
 			else:
 				raise NotImplementedError
-			pass
 		else:
 			self.dataset_train = None
-		pass
 
 
 	def _init_network(self):
@@ -206,26 +205,28 @@ class EPEExperiment(ee.GANExperiment):
 
 		if generator_type == 'hr':
 			generator = nw.ResidualGenerator(nw.make_ienet(self.gen_cfg))
-			pass
 		elif generator_type == 'hr_new':
 			generator = PassthruGenerator(nw.make_ienet2(self.gen_cfg))
-			pass
-
 		discriminator = {\
-			'patchgan':nw.PatchGANDiscriminator,
+				'patchgan':nw.PatchGANDiscriminator,
 			'pde':nw.PerceptualDiscEnsemble,
 			'ppde':nw.PerceptualProjectionDiscEnsemble,
 		}[discriminator_type](self.disc_cfg)
 
 		self.network           = nw.GAN(generator, discriminator).to(self.device)
-		self.adaptive_backprop = epe.utils.AdaptiveBackprop(len(self.network.discriminator), self.device, backprop_target) if not run_disc_always else None
+		self.adaptive_backprop = (
+			None
+			if run_disc_always
+			else epe.utils.AdaptiveBackprop(
+				len(self.network.discriminator), self.device, backprop_target
+			)
+		)
 		self._log.debug(f'AdaptiveBackprop is [{"on" if self.adaptive_backprop else "off"}].')
 		self._log.debug(f'  check fake performance : [{"on" if self.check_fake_for_backprop else "off"}].')
 		self._log.debug(f'  target                 : {backprop_target}')
 
 		self._log.debug('Networks are initialized.')
 		self._log.info(f'{self.network}')
-		pass
 
 
 	def _run_generator(self, batch_fake, batch_real, batch_id):
@@ -233,20 +234,18 @@ class EPEExperiment(ee.GANExperiment):
 		rec_fake     = self.network.generator(batch_fake)
 
 		realism_maps = self.network.discriminator.forward(\
-			vgg=self.vgg, img=rec_fake, robust_labels=batch_fake.robust_labels, 
+				vgg=self.vgg, img=rec_fake, robust_labels=batch_fake.robust_labels, 
 			fix_input=False, run_discs=True)
 
 		loss     =  epsilon
 		log_info = {}
 		for i, rm in enumerate(realism_maps):
 			loss, log_info[f'gs{i}'] = tee_loss(loss, self.gan_loss.forward_gen(rm[0,:,:,:].unsqueeze(0)).mean())
-			pass
-
 		loss, log_info['vgg'] = tee_loss(loss, self.vgg_weight * self.vgg_loss.forward_fake(batch_fake.img, rec_fake)[0])
 		loss.backward()
 
 		return log_info, \
-		{'rec_fake':rec_fake.detach(), 'fake':batch_fake.img.detach(), 'real':batch_real.img.detach()}
+			{'rec_fake':rec_fake.detach(), 'fake':batch_fake.img.detach(), 'real':batch_real.img.detach()}
 
 
 	def _forward_generator_fake(self, batch_fake):
@@ -266,15 +265,11 @@ class EPEExperiment(ee.GANExperiment):
 			run_discs = self.adaptive_backprop.sample()
 		else:
 			run_discs = [True] * len(self.network.discriminator)
-			pass
-
 		if not any(run_discs):
 			return log_scalar, log_img
 
 		with torch.no_grad():
 			rep_fake = self.network.generator(batch_fake)
-			pass
-
 		log_img['fake']     = batch_fake.img.detach()
 		log_img['rec_fake'] = rep_fake.detach()
 
@@ -283,7 +278,7 @@ class EPEExperiment(ee.GANExperiment):
 
 		# forward fake images
 		realism_maps = self.network.discriminator.forward(\
-			vgg=self.vgg, img=rec_fake, robust_labels=batch_fake.robust_labels, 
+				vgg=self.vgg, img=rec_fake, robust_labels=batch_fake.robust_labels, 
 			fix_input=True, run_discs=run_discs)
 
 		loss = 0
@@ -294,48 +289,39 @@ class EPEExperiment(ee.GANExperiment):
 
 			if self._log.isEnabledFor(logging.DEBUG):
 				log_img[f'realism_fake_{i}'] = rm.detach()
-				pass
-
 			# for getting probability of back
 			if self.check_fake_for_backprop:
 				pred_labels[i] = [(rm.detach() < 0.5).float().reshape(1,-1)]
-				pass
 			log_scalar[f'rdf{i}']      = accuracy(rm.detach()) # percentage of fake predicted as real
 			loss, log_scalar[f'ds{i}'] = tee_loss(loss, self.gan_loss.forward_fake(rm).mean())
-			pass
 		del rm
 		del realism_maps
 
 		loss.backward()
 
 
-		log_img['real'] = batch_real.img.detach()	
+		log_img['real'] = batch_real.img.detach()
 		batch_real.img.requires_grad_()
 
 		# forward real images
 		realism_maps = self.network.discriminator.forward(\
-			vgg=self.vgg, img=batch_real.img, robust_labels=batch_real.robust_labels, robust_img=batch_real.img, 
+				vgg=self.vgg, img=batch_real.img, robust_labels=batch_real.robust_labels, robust_img=batch_real.img, 
 			fix_input=(self.reg_weight <= 0), run_discs=run_discs)
 
-		loss = 0		
+		loss = 0
 		for i, rm in enumerate(realism_maps):
 			if rm is None:
 				continue
 
 			if self._log.isEnabledFor(logging.DEBUG):
 				log_img[f'realism_real_{i}'] = rm.detach()
-				pass
-
 			if i in pred_labels:
 				# predicted correctly, here real as real
 				pred_labels[i].append((rm.detach() > 0.5).float().reshape(1,-1))
 			else:
 				pred_labels[i] = [(rm.detach() > 0.5).float().reshape(1,-1)]
-				pass
-
 			log_scalar[f'rdr{i}'] = accuracy(rm.detach()) # percentage of real predicted as real	
 			loss += self.gan_loss.forward_real(rm).mean()
-			pass
 		del rm
 		del realism_maps
 
@@ -347,14 +333,9 @@ class EPEExperiment(ee.GANExperiment):
 			(self.reg_weight * reg_loss).backward()
 		else:
 			loss.backward()
-			pass
-		pass
-
 		# update disc probabilities
 		if self.adaptive_backprop is not None:
 			self.adaptive_backprop.update(pred_labels)
-			pass
-
 		return log_scalar, log_img
 
 
@@ -378,7 +359,6 @@ class EPEExperiment(ee.GANExperiment):
 		# 	pass
 		img = (new_img[0,...].clamp(min=0,max=1).permute(1,2,0).cpu().numpy() * 255.0).astype(np.uint8)
 		imageio.imwrite(str(self.dbg_dir / self.weight_save / f'{filename}{self.result_ext}'), img[:,:,:3])
-		pass
 	pass
 
 

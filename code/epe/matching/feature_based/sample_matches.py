@@ -25,8 +25,6 @@ def load_crops(path):
 		for row in reader:
 			paths.append(row['path'])
 			coords.append((int(row['r0']), int(row['r1']), int(row['c0']), int(row['c1'])))
-			pass
-		pass
 	return paths, coords
 
 
@@ -48,11 +46,11 @@ if __name__ == '__main__':
 
 	src_paths, src_coords = load_crops(args.src_crop_path)
 	dst_paths, dst_coords = load_crops(args.dst_crop_path)
-	
+
 	dst_id = data['ind']
 	thresholds = [0.0, 0.1, 0.2,0.5,0.6, 0.7, 1.0,1.2, 1.5, 2.0]
 	for ti, t in enumerate(thresholds[1:]): 
-	
+
 		print(f'Sampling dist at {t}...')
 		src_id, knn = np.nonzero(np.logical_and(thresholds[ti] < s, s < t))
 		crops = []
@@ -66,13 +64,7 @@ if __name__ == '__main__':
 			img, _ = dst_dataset.get_by_path(dst_paths[int(dst_id[int(src_id[i]), int(knn[i])])])
 			r0,r1,c0,c1 = dst_coords[int(dst_id[int(src_id[i]), int(knn[i])])]
 			b = img[:,r0:r1,c0:c1].unsqueeze(0)
-			crops.append(a)
-			crops.append(b)
-			pass
-
-		if len(crops) > 0:
+			crops.extend((a, b))
+		if crops:
 			grid = make_grid(torch.cat(crops, 0), nrow=2)
 			imwrite(f'knn_{t}.jpg', (255.0*grid.permute(1,2,0).numpy()).astype(np.uint8))
-			pass
-		pass
-	pass

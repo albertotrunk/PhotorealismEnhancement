@@ -12,10 +12,10 @@ base = Path (os.path.dirname(os.path.realpath(__file__)))
 
 print(base)
 
-for  daatsetName in ["Carla"]:#["PFD"  ,"A2d2"  ]:
+#daatsetName = "Carla"
+imageextention = '.png'
 
-    #daatsetName = "Carla"
-    imageextention = '.png'
+for daatsetName in ["Carla"]:#["PFD"  ,"A2d2"  ]:
 
     save_directory = Path(os.path.join(Path(base).parent , "data", daatsetName) )
     print(save_directory)
@@ -27,18 +27,18 @@ for  daatsetName in ["Carla"]:#["PFD"  ,"A2d2"  ]:
 
 
 
-    save_filelist = [file for file in os.listdir(save_directoryImages)   ]
+    save_filelist = list(os.listdir(save_directoryImages))
 
 
 
-    with open( os.path.join(save_directory , daatsetName + ".txt"), 'w') as text_file:
+    with open(os.path.join(save_directory, f"{daatsetName}.txt"), 'w') as text_file:
 
 
         for file in tqdm( save_filelist ):
             pathImage =  save_directoryImages.joinpath( file)
             pathImageGroundtruth =  save_directoryImagesGroundtruth.joinpath( file)
             pathGray =  save_directoryGray.joinpath( file)
-            pathGbuffers = save_directoryGbuffers.joinpath( Path(file).stem + ".npz"  )
+            pathGbuffers = save_directoryGbuffers.joinpath(f"{Path(file).stem}.npz")
 
             if save_directoryGbuffers.exists():
                 try:
@@ -46,8 +46,11 @@ for  daatsetName in ["Carla"]:#["PFD"  ,"A2d2"  ]:
                     image2 = cv2.imread(str(pathGray))
                     image3 = cv2.imread(str(pathImageGroundtruth))
                     data = np.load(str(pathGbuffers))
-                    if pathImage.exists() and  pathGray.exists() and pathImageGroundtruth.exists() and  pathGbuffers.exists() :
-                        text_file.write(str(pathImage) + ","  + str( pathGray ) +","+ str( pathGbuffers )+","  + str(pathImageGroundtruth  ) + ",\n")
+                    if pathImage.exists() and  pathGray.exists() and pathImageGroundtruth.exists() and  pathGbuffers.exists():
+                        text_file.write(
+                            f"{str(pathImage)},{str(pathGray)},{str(pathGbuffers)},{str(pathImageGroundtruth)}"
+                            + ",\n"
+                        )
 
                     else:
                         print("Why")
@@ -55,15 +58,15 @@ for  daatsetName in ["Carla"]:#["PFD"  ,"A2d2"  ]:
                         print(pathGray.absolute())
 
                 except:
-                    print(str(pathImage) , " is not loadabel as image")
+                    print(pathImage, " is not loadabel as image")
             else:
                 try:
                     image = cv2.imread(str(pathImage))
                     image2 = cv2.imread(str(pathGray))
-                    if pathImage.exists() and  pathGray.exists()  :
-                        text_file.write(str(pathImage) + ","+ str(pathGray) + ",\n")
+                    if pathImage.exists() and  pathGray.exists():
+                        text_file.write(f"{str(pathImage)},{str(pathGray)}" + ",\n")
 
                 except:
-                    print(str(pathImage) , " is not loadabel as image")
+                    print(pathImage, " is not loadabel as image")
 
 

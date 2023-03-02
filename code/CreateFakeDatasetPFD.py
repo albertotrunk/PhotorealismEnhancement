@@ -40,80 +40,59 @@ save_directoryGbuffers= os.path.join(save_directory, "Gbuffers")
 if not os.path.exists(save_directoryGbuffers):
     os.makedirs(save_directoryGbuffers)
 
-infodict = dict()
-infodict[ "unlabeled"  ]  = [0, 0, 0, 0   ]
-infodict[ "sky"  ]  = [70,130,180, 23   ]
-infodict[ "road"  ]  = [128,64,128, 7  ]
-infodict[ "static"  ]  = [20,20,20, 8   ]
-infodict[ "sidewalk"  ]  = [244,35,232, 9   ]
-
-infodict[ "car"  ]  = [0,0,142, 26   ] 
-infodict[ "truck"  ]  = [0,0,70,26   ] 
-infodict[ "bus"  ]  = [0,60,100,26   ] 
-infodict[ "caravan"  ]  = [0,0,90,26   ] 
-infodict[ "trailer"  ]  = [0,0,110,26   ] 
-infodict[ "train"  ]  = [0,80,100,26   ] 
-infodict[ "motorcycle"  ]  = [0,0,230,26   ] 
-infodict[ "bicycle"  ]  = [119,11,32,26   ] 
-infodict[ "licenseplate"  ]  = [0,0,142,26   ]
-
-infodict["person"] = [220,20,60, 24  ]
-infodict["rider"] = [255,0,0, 24  ]
-
-infodict["Ground"] = [81,0,81, 9]
-
-infodict[ "dynamic"  ]  = [111,74,0, 26   ] 
-
-infodict[ "building"  ]  = [70, 70, 70 , 4  ]
-infodict["Wall"] = [102, 102, 156 ,  4  ]
-
-infodict["Fence"] = [190,153,153,  11 ]
-
-infodict["GuardRail"] = [180,165,180, 9  ]
-
-infodict["Bridge"] = [150, 100, 100 ,  4  ]
-infodict["tunnel"] = [150,120,90,  4  ]
-
-infodict["pole"] = [153, 153, 153 , 17 ]
-
-infodict["TrafficLight"] = [250,170,30, 19  ]
-
-infodict["TrafficSign"] = [220, 220, 0 , 20]
-
-
-
-
-infodict["Vegetation"] = [107, 142, 35 ,  21 ]
- 
- 
-
-infodict[ "parking"  ]  = [250,170,160, 7  ]
-
-
-infodict["RailTrack"] = [230, 150, 140 , 9  ]
-
-
-infodict["Terrain"] = [152,251,152, 22 ]
+infodict = {
+    "unlabeled": [0, 0, 0, 0],
+    "sky": [70, 130, 180, 23],
+    "road": [128, 64, 128, 7],
+    "static": [20, 20, 20, 8],
+    "sidewalk": [244, 35, 232, 9],
+    "car": [0, 0, 142, 26],
+    "truck": [0, 0, 70, 26],
+    "bus": [0, 60, 100, 26],
+    "caravan": [0, 0, 90, 26],
+    "trailer": [0, 0, 110, 26],
+    "train": [0, 80, 100, 26],
+    "motorcycle": [0, 0, 230, 26],
+    "bicycle": [119, 11, 32, 26],
+    "licenseplate": [0, 0, 142, 26],
+    "person": [220, 20, 60, 24],
+    "rider": [255, 0, 0, 24],
+    "Ground": [81, 0, 81, 9],
+    "dynamic": [111, 74, 0, 26],
+    "building": [70, 70, 70, 4],
+    "Wall": [102, 102, 156, 4],
+    "Fence": [190, 153, 153, 11],
+    "GuardRail": [180, 165, 180, 9],
+    "Bridge": [150, 100, 100, 4],
+    "tunnel": [150, 120, 90, 4],
+    "pole": [153, 153, 153, 17],
+    "TrafficLight": [250, 170, 30, 19],
+    "TrafficSign": [220, 220, 0, 20],
+    "Vegetation": [107, 142, 35, 21],
+    "parking": [250, 170, 160, 7],
+    "RailTrack": [230, 150, 140, 9],
+    "Terrain": [152, 251, 152, 22],
+}
 
 def encod_Gt(gt_labelmap):
 
-        h, w, chanel = gt_labelmap.shape
-        shader_map = np.zeros((h, w), dtype=np.float32)
+    h, w, chanel = gt_labelmap.shape
+    shader_map = np.zeros((h, w), dtype=np.float32)
 
 
 
-        for key in infodict.keys():
-            array = infodict.get(key)
-            color = np.array(array[ 0:3])
-            code=  array[3]
+    for key in infodict.keys():
+        array = infodict.get(key)
+        color = np.array(array[:3])
+        code=  array[3]
 
-            mask = cv2.inRange(gt_labelmap, color, color)
-            shader_map[ np.where(mask ==  255 ) ]  =  code
-
-
+        mask = cv2.inRange(gt_labelmap, color, color)
+        shader_map[ np.where(mask ==  255 ) ]  =  code
 
 
-        return shader_map
+
+
+    return shader_map
 
 
 
@@ -121,9 +100,9 @@ allfiles = []
 
 try:
 
-    for index ,folder in enumerate (sorceimagesFoldersList ) :
+    for index ,folder in enumerate (sorceimagesFoldersList ):
 
-        filelist = [file for file in os.listdir(folder)   ]
+        filelist = list(os.listdir(folder))
         print("\t", folder, "  ->found")
         folder2 = ground_truth_label_map[index]
 
@@ -159,20 +138,17 @@ try:
 except:
     print("no files was resized")
 
-save_filelist = [file for file in os.listdir(save_directoryImages)   ]
+save_filelist = list(os.listdir(save_directoryImages))
 
-f = open( os.path.join(save_directory , daatsetName + ".csv"), 'w')
-# create the csv writer
-writer = csv.writer(f)
+with open(os.path.join(save_directory, f"{daatsetName}.csv"), 'w') as f:
+    # create the csv writer
+    writer = csv.writer(f)
 
-for file in tqdm( save_filelist ):
-    path = os.path.join(save_directoryImages, file)
-    try:
-        image = cv2.imread(path)
-        writer.writerow([path])
-    except:
-        print(path, " is not loadabel as image")
-
-# close the file
-f.close()
+    for file in tqdm( save_filelist ):
+        path = os.path.join(save_directoryImages, file)
+        try:
+            image = cv2.imread(path)
+            writer.writerow([path])
+        except:
+            print(path, " is not loadabel as image")
 

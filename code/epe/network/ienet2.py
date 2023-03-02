@@ -142,25 +142,25 @@ class HighResolutionModule(nn.Module):
 		self.relu        = nn.ReLU(inplace=False)
 
 		assert len(self.branches) == num_branches, f'HRModule has {len(self.branches)} branches, but is supposed to have {num_branches}.'
-		pass
 
 
 	def _check_branches(self, num_branches, blocks, num_blocks, num_inchannels, num_channels):
 		if num_branches != len(num_blocks):
-			error_msg = 'NUM_BRANCHES({}) <> NUM_BLOCKS({})'.format(
-				num_branches, len(num_blocks))
+			error_msg = f'NUM_BRANCHES({num_branches}) <> NUM_BLOCKS({len(num_blocks)})'
 			logger.error(error_msg)
 			raise ValueError(error_msg)
 
 		if num_branches != len(num_channels):
-			error_msg = 'NUM_BRANCHES({}) <> NUM_CHANNELS({})'.format(
-				num_branches, len(num_channels))
+			error_msg = (
+				f'NUM_BRANCHES({num_branches}) <> NUM_CHANNELS({len(num_channels)})'
+			)
 			logger.error(error_msg)
 			raise ValueError(error_msg)
 
 		if num_branches != len(num_inchannels):
-			error_msg = 'NUM_BRANCHES({}) <> NUM_INCHANNELS({})'.format(
-				num_branches, len(num_inchannels))
+			error_msg = (
+				f'NUM_BRANCHES({num_branches}) <> NUM_INCHANNELS({len(num_inchannels)})'
+			)
 			logger.error(error_msg)
 			raise ValueError(error_msg)
 
@@ -168,7 +168,7 @@ class HighResolutionModule(nn.Module):
 	def _make_one_branch(self, branch_index, block, block_expansion, num_blocks, num_channels, stride=1):
 		downsample = None
 		if stride != 1 or \
-		   self.num_inchannels[branch_index] != num_channels[branch_index] * block_expansion:
+			   self.num_inchannels[branch_index] != num_channels[branch_index] * block_expansion:
 			downsample = nn.Sequential(
 				nn.Conv2d(self.num_inchannels[branch_index],
 						  num_channels[branch_index] * block_expansion,
@@ -177,25 +177,30 @@ class HighResolutionModule(nn.Module):
 						  #  momentum=BN_MOMENTUM),
 			)
 
-		layers = []
-		layers.append(block(self.num_inchannels[branch_index],
-							num_channels[branch_index], stride, downsample))
+		layers = [
+			block(
+				self.num_inchannels[branch_index],
+				num_channels[branch_index],
+				stride,
+				downsample,
+			)
+		]
 		self.num_inchannels[branch_index] = \
-			num_channels[branch_index] * block_expansion
-		for i in range(1, num_blocks[branch_index]):
-			layers.append(block(self.num_inchannels[branch_index],
-								num_channels[branch_index]))
-
+				num_channels[branch_index] * block_expansion
+		layers.extend(
+			block(self.num_inchannels[branch_index], num_channels[branch_index])
+			for _ in range(1, num_blocks[branch_index])
+		)
 		return nn.Sequential(*layers)
 
 
 	def _make_branches(self, num_branches, block, block_expansion, num_blocks, num_channels):
-		branches = []
-
-		for i in range(num_branches):
-			branches.append(
-				self._make_one_branch(i, block, block_expansion, num_blocks, num_channels, 1))
-
+		branches = [
+			self._make_one_branch(
+				i, block, block_expansion, num_blocks, num_channels, 1
+			)
+			for i in range(num_branches)
+		]
 		return nn.ModuleList(branches)
 
 
@@ -236,14 +241,20 @@ class HighResolutionModule(nn.Module):
 										   # momentum=BN_MOMENTUM)))
 						else:
 							num_outchannels_conv3x3 = num_inchannels[j]
-							conv3x3s.append(nn.Sequential(
-								nn.ReplicationPad2d(1),
-								nn.Conv2d(num_inchannels[j],
-										  num_outchannels_conv3x3,
-										  3, 2, 0, bias=True),
-								# self.Norm2d(num_outchannels_conv3x3),
-										  #  momentum=BN_MOMENTUM),
-								nn.ReLU(inplace=False)))
+							conv3x3s.append(
+								nn.Sequential(
+									nn.ReplicationPad2d(1),
+									nn.Conv2d(
+										num_outchannels_conv3x3,
+										num_outchannels_conv3x3,
+										3,
+										2,
+										0,
+										bias=True,
+									),
+									nn.ReLU(inplace=False),
+								)
+							)
 					fuse_layer.append(nn.Sequential(*conv3x3s))
 			fuse_layers.append(nn.ModuleList(fuse_layer))
 
@@ -335,23 +346,19 @@ class HighResolutionNet(nn.Module):
 			dim_in = 3
 
 		self.stem = nf.make_conv_layer(\
-				[dim_in, 16, 16], 
+					[dim_in, 16, 16], 
 				1, False, False, None)
 
 		if self._encoder_type is GBufferEncoderType.ENCODER:
 			self.gbuffer_encoder = ge.GBufferEncoder(0, \
-				self._gbuffer_encoder_norm, self._num_classes, 
+					self._gbuffer_encoder_norm, self._num_classes, 
 				self._num_gbuf_channels, ie_config['cls2gbuf'], self._num_stages)
-			pass
 		elif self._encoder_type is GBufferEncoderType.COMPLEX:
 			self.gbuffer_encoder = make_genet(ie_config)
-			pass
 		else:
 			self.gbuffer_encoder = None
-			pass	
-
 		self.stage1_cfg    = extra['STAGE1']
-		self._log.debug(f'  Stage 1')
+		self._log.debug('  Stage 1')
 		self._log.debug(f'  {self.stage1_cfg}')
 
 		num_channels       = self.stage1_cfg['NUM_CHANNELS'][0]
@@ -364,7 +371,7 @@ class HighResolutionNet(nn.Module):
 		stages      = []
 		transitions = []
 		for si in range(2, self._num_stages+1):
-			stage_cfg = extra[f'STAGE{si}']			
+			stage_cfg = extra[f'STAGE{si}']
 			num_channels       = stage_cfg['NUM_CHANNELS']
 			block, block_exp   = blocks_dict[stage_cfg['BLOCK']]
 			num_channels       = [num_channels[i] * block_exp for i in range(len(num_channels))]
@@ -372,8 +379,6 @@ class HighResolutionNet(nn.Module):
 			stage, pre_stage_channels = self._make_stage(block, block_exp, stage_cfg, num_channels)
 			stages.append(stage)
 			stage_cfgs.append(stage_cfg)
-			pass
-
 		self.transitions = nn.ModuleList(transitions)
 		self.stages      = nn.ModuleList(stages)
 		self.stage_cfgs  = stage_cfgs
@@ -385,12 +390,8 @@ class HighResolutionNet(nn.Module):
 			m = [nn.ReplicationPad2d(1), nn.Conv2d(ci+co, co, 3), nn.LeakyReLU(0.2, True)]
 			if i == self._num_stages-2:
 				m += [nn.ReplicationPad2d(1), nn.Conv2d(co, 3, 3)]
-				pass
 			last_layers.append(nn.Sequential(*m))
-			pass
-
 		self.up_layers = nn.ModuleList(last_layers)
-		pass
 
 
 	def _make_transition_layer(self, num_channels_pre_layer, num_channels_cur_layer):
@@ -440,12 +441,9 @@ class HighResolutionNet(nn.Module):
 				# self.Norm2d(planes * block_expansion),#, momentum=BN_MOMENTUM),
 			)
 
-		layers = []
-		layers.append(block(inplanes, planes, stride, downsample))
+		layers = [block(inplanes, planes, stride, downsample)]
 		inplanes = planes * block_expansion
-		for i in range(1, num_blocks):
-			layers.append(block(inplanes, planes))
-
+		layers.extend(block(inplanes, planes) for _ in range(1, num_blocks))
 		return nn.Sequential(*layers)
 
 
@@ -460,10 +458,7 @@ class HighResolutionNet(nn.Module):
 		modules = []
 		for i in range(num_modules):
 			# multi_scale_output is only used last module
-			if not multi_scale_output and i == num_modules - 1:
-				reset_multi_scale_output = False
-			else:
-				reset_multi_scale_output = True
+			reset_multi_scale_output = bool(multi_scale_output or i != num_modules - 1)
 			modules.append(
 				HighResolutionModule(num_branches,
 									  block,
@@ -491,11 +486,9 @@ class HighResolutionNet(nn.Module):
 
 		if self._log.isEnabledFor(logging.DEBUG):
 			self._log.debug(f'IENet:forward(i:{x.shape}, g:{g.shape}, s:{s.shape})')
-			pass
-
 		if self._encoder_type is GBufferEncoderType.CONCAT:
 			x = torch.cat((x, g), 1)
-			g_list = [None for i in range(4)]
+			g_list = [None for _ in range(4)]
 		elif self._encoder_type is GBufferEncoderType.SPADE:
 			g_list = [g]
 		elif self._encoder_type in [GBufferEncoderType.ENCODER]:
@@ -503,7 +496,7 @@ class HighResolutionNet(nn.Module):
 		elif self._encoder_type in [GBufferEncoderType.COMPLEX]:
 			g_list = self.gbuffer_encoder([g,s])
 		else:
-			g_list = [None for i in range(4)]
+			g_list = [None for _ in range(4)]
 
 		del g
 		del s
@@ -512,22 +505,17 @@ class HighResolutionNet(nn.Module):
 			self._log.debug(f'  Encoded G-buffers for {len(g_list)} branches:')
 			for i,gi in enumerate(g_list):
 				self._log.debug(f'  {i}: {gi.shape}')
-				pass				
-			pass
-
 		x   = self.stem(x)
 		x,_ = self.layer1([x, g_list[0]])
 
 
 		x_list = [x if self.transitions[0][i] is None else self.transitions[0][i](x) \
-			for i in range(self.stage_cfgs[0]['NUM_BRANCHES'])]
+				for i in range(self.stage_cfgs[0]['NUM_BRANCHES'])]
 
 
 		for j in range(self._num_stages-2):
 			if self._encoder_type is GBufferEncoderType.SPADE:
 				g_list = ge._append_downsampled_gbuffers(g_list, x_list)
-				pass
-
 			x_list = [x_list, g_list]
 			y_list, _ = self.stages[j](x_list)
 
@@ -537,14 +525,8 @@ class HighResolutionNet(nn.Module):
 					x_list.append(y_list[i])
 				else:
 					x_list.append(self.transitions[j+1][i](y_list[i if i < self.stage_cfgs[j]['NUM_BRANCHES'] else -1]))
-					pass
-				pass
-			pass
-
 		if self._encoder_type is GBufferEncoderType.SPADE:
 			g_list = ge._append_downsampled_gbuffers(g_list, x_list)
-			pass
-
 		x_list = [x_list, g_list]
 		x, _ = self.stages[-1](x_list)
 		del y_list
@@ -556,7 +538,6 @@ class HighResolutionNet(nn.Module):
 		for i,xi in enumerate(x[1:]):
 			y = F.interpolate(y, size=(xi.shape[-2], xi.shape[-1]), mode='bilinear', align_corners=False)
 			y = self.up_layers[i](torch.cat((y, xi), 1))
-			pass
 		return y
 
 
@@ -574,15 +555,15 @@ def make_hrnet_config(num_stages):
 	hrnet_cfg = {}
 
 	for i in range(1,num_stages+1):
-		cfg = {}
-		cfg['NUM_MODULES']  = 1
-		cfg['NUM_BRANCHES'] = i
-		cfg['NUM_BLOCKS']   = [3]*i
-		cfg['NUM_CHANNELS'] = [16 * 2**j for j in range(0,i)]
-		cfg['BLOCK']        = 'BASIC'
-		cfg['FUSE_METHOD']  = 'SUM'
+		cfg = {
+			'NUM_MODULES': 1,
+			'NUM_BRANCHES': i,
+			'NUM_BLOCKS': [3] * i,
+			'NUM_CHANNELS': [16 * 2**j for j in range(i)],
+			'BLOCK': 'BASIC',
+			'FUSE_METHOD': 'SUM',
+		}
 		hrnet_cfg[f'STAGE{i}'] = cfg
-		pass
 	return hrnet_cfg
 
 

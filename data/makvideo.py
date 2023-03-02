@@ -4,6 +4,7 @@ Created on 05.07.2022
 @author: rizka
 '''
 
+
 import cv2
 import numpy as np
 import glob, os
@@ -30,7 +31,7 @@ if __name__ == '__main__':
     os.chdir(Output)
     for file in glob.glob("*.jpg"):
         #print(file)
-        Imagekey = file.replace(f".jpg", "")
+        Imagekey = file.replace(".jpg", "")
         print(Imagekey)
         imagefilelist.append(Imagekey )
 
@@ -49,8 +50,8 @@ if __name__ == '__main__':
 
     for Imagekey in tqdm(imagefilelist ):
 
-        inputpath = os.path.join(Input, Imagekey + f'.png')
-        outputpath =  os.path.join(Output , Imagekey + f'.jpg')
+        inputpath = os.path.join(Input, f'{Imagekey}.png')
+        outputpath = os.path.join(Output, f'{Imagekey}.jpg')
 
 
         if os.path.isfile(inputpath) and os.path.isfile(outputpath):

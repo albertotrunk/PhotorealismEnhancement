@@ -34,15 +34,7 @@ def read_filelist(path_to_filelist, num_expected_entries_per_row, check_if_exist
 					num_skipped += 1
 					# logger.warn(f'Skipping {i}: {skip[0]} does not exist.')
 					continue
-					# assert p.exists(), f'Path {p} does not exist.'
-					
-					pass
-				pass
-
 			paths.append(tuple(ps))
-			pass
-		pass
-
 	if num_skipped > 0:
 		logger.warn(f'Skipped {num_skipped} entries since at least one file was missing.')
 
@@ -66,14 +58,19 @@ def load_crops(path):
 		logger.warn(f'Failed to load crops from {path} because it does not exist.')
 		return []
 
-	crops = []		
+	crops = []
 	with open(path) as file:
 		reader = csv.DictReader(file)
-		for row in tqdm(reader):
-			crops.append((row['path'], int(row['r0']), int(row['r1']), int(row['c0']), int(row['c1'])))
-			pass
-		pass
-	
+		crops.extend(
+			(
+				row['path'],
+				int(row['r0']),
+				int(row['r1']),
+				int(row['c0']),
+				int(row['c1']),
+			)
+			for row in tqdm(reader)
+		)
 	logger.debug(f'Loaded {len(crops)} crops.')
 	return crops
 

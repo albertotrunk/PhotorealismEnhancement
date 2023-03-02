@@ -39,7 +39,6 @@ class ImageBatch(Batch):
 		self.img      = _safe_expand(img)
 		self.path     = path
 		self._coords  = (0, img.shape[-2], 0, img.shape[-1]) if coords is None else coords
-		pass
 
 	def to(self, device):
 		return ImageBatch(_safe_to(self.img, device), path=self.path)
@@ -77,7 +76,6 @@ class EPEBatch(ImageBatch):
 		self.gt_labels     = _safe_expand(gt_labels)
 		self.gbuffers      = _safe_expand(gbuffers)
 		self.robust_labels = _safe_expand(robust_labels)
-		pass
 
 
 	@property
