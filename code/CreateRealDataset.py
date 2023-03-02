@@ -40,7 +40,7 @@ allfiles = []
 for folder in sorceimagesFoldersList:
     print(folder)
     try:
-        filelist = [file for file in os.listdir(folder)   ]
+        filelist = list(os.listdir(folder))
         print("\t", folder, "  ->found")
         for file in tqdm( filelist ):
             path1 = os.path.join(folder , file)
@@ -63,20 +63,17 @@ for folder in sorceimagesFoldersList:
     except:
         print("no files was resized")
 
-save_filelist = [file for file in os.listdir(save_directoryImages)   ]
+save_filelist = list(os.listdir(save_directoryImages))
 
-f = open( os.path.join(save_directory , daatsetName + ".csv"), 'w')
-# create the csv writer
-writer = csv.writer(f)
+with open(os.path.join(save_directory, f"{daatsetName}.csv"), 'w') as f:
+    # create the csv writer
+    writer = csv.writer(f)
 
-for file in tqdm( save_filelist ):
-    path = os.path.join(save_directoryImages, file)
-    try:
-        image = cv2.imread(path)
-        writer.writerow([path])
-    except:
-        print(path, " is not loadabel as image")
-
-# close the file
-f.close()
+    for file in tqdm( save_filelist ):
+        path = os.path.join(save_directoryImages, file)
+        try:
+            image = cv2.imread(path)
+            writer.writerow([path])
+        except:
+            print(path, " is not loadabel as image")
 

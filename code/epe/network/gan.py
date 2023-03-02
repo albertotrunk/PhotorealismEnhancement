@@ -5,4 +5,3 @@ class GAN(nn.Module):
 		super(GAN, self).__init__()
 		self.discriminator = discriminator
 		self.generator     = generator
-		pass

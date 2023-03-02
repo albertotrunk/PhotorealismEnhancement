@@ -13,7 +13,6 @@ from epe.network import VGG16
 
 def seed_worker(id):
 	np.random.seed(torch.initial_seed() % np.iinfo(np.int32).max)
-	pass
 
 if __name__ == '__main__':
 

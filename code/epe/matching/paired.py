@@ -20,14 +20,13 @@ class PairedDataset(torch.utils.data.Dataset):
 		self.dst_crops = []
 
 		self._log = logging.getLogger('epe.dataset.PairedDataset')
-		pass
 
 
 	def _get_cropped_items(self, idx, jdx):
 		s = self.src_crops[idx]
 		t = self.dst_crops[jdx]
 
-		self._log.debug(f'_get_cropped_items:')
+		self._log.debug('_get_cropped_items:')
 
 		src_id = self._source_dataset.get_id(s[0])
 		if src_id is None:
@@ -64,7 +63,7 @@ class MatchedCrops(PairedDataset):
 		super(MatchedCrops, self).__init__(source_dataset, target_dataset)
 
 		self._log = logging.getLogger('epe.dataset.MatchedCrops')
-		self._log.debug(f'Initializing sampling with matching crops ...')
+		self._log.debug('Initializing sampling with matching crops ...')
 		self._log.debug(f'  src         : {source_dataset.name}')
 		self._log.debug(f'  dst         : {target_dataset.name}')
 
@@ -82,9 +81,6 @@ class MatchedCrops(PairedDataset):
 				valid_src_crops.append(sc)
 				valid_dst_crops.append(dc)
 				valid_ids.append(i)
-				pass
-			pass
-
 		self._log.debug(f'Done to {len(valid_ids)} crops.')
 
 		self.src_crops = valid_src_crops
@@ -96,17 +92,13 @@ class MatchedCrops(PairedDataset):
 			self._cumsum = np.cumsum(w) / np.sum(w)
 			assert len(self.src_crops) == self._cumsum.shape[0], f'Weights ({self._cumsum.shape[0]}) and source crops ({len(self.src_crops)}) do not match.'
 			self._weighted = True
-			pass
-
 		self._log.debug('Sampling Initialized.')
-		pass
 
 	def __getitem__(self, idx):
 		try:
 			if self._weighted:
 				p   = random.random()
 				idx = np.min(np.nonzero(p<self._cumsum)[0])
-				pass
 			return self._get_cropped_items(idx, idx)
 		except KeyError:
 			return self.__getitem__(random.randint(0, len(self.src_crops)-1))
@@ -120,7 +112,6 @@ class IndependentCrops(PairedDataset):
 		super(IndependentCrops, self).__init__(source_dataset, target_dataset)
 
 		self._crop_size = int(cfg.get('crop_size', 196))
-		pass
 
 	def _sample_crop(self, batch):
 		r1 = random.randint(self._crop_size, batch.img.shape[-2])

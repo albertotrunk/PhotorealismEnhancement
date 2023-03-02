@@ -5,7 +5,6 @@ epsilon=1e-08
 class HingeLoss(nn.Module):
 	def __init__(self):
 		super(HingeLoss, self).__init__()
-		pass
 
 	def forward_gen(self, input):
 		# should be 1 or higher
@@ -27,7 +26,6 @@ def _fw_ls_real(input):
 class LSLoss(nn.Module):
 	def __init__(self):
 		super(LSLoss, self).__init__()
-		pass
 
 	def forward_gen(self, input):
 		# should be 1
@@ -46,7 +44,6 @@ class LSLoss(nn.Module):
 class NSLoss(nn.Module):
 	def __init__(self):
 		super(NSLoss, self).__init__()
-		pass
 
 	def forward_gen(self, input):
 		# should be 1

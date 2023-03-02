@@ -25,14 +25,13 @@ class ImageDataset(torch.utils.data.Dataset):
 
 		img_paths  = [Path(p[0] if type(p) is tuple else p) for p in img_paths]
 		self.paths = sorted([p for p in img_paths if p.is_file() and p.suffix in ['.jpg', '.png']])
-		
+
 		self._path2id    = {p.stem:i for i,p in enumerate(self.paths)}
 		self.transform   = transform
-		
+
 		self.name = name
 		self._log = logging.getLogger(f'epe.dataset.{name}')
 		self._log.info(f'Found {len(self.paths)} images.')
-		pass
 
 
 	def _load_img(self, path):
@@ -41,7 +40,6 @@ class ImageDataset(torch.utils.data.Dataset):
 		except:
 			logging.exception(f'Failed to load {path}.')
 			raise
-		pass
 
 
 	def get_id(self, path):
@@ -56,9 +54,7 @@ class ImageDataset(torch.utils.data.Dataset):
 
 		if self.transform is not None:
 			img = self.transform(img)
-			pass
-
-		img = mat2tensor(img)   
+		img = mat2tensor(img)
 		return ImageBatch(img, path)
 
 

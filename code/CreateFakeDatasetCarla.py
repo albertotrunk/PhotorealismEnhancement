@@ -35,50 +35,50 @@ save_directoryGbuffers= os.path.join(save_directory, "Gbuffers")
 if not os.path.exists(save_directoryGbuffers):
     os.makedirs(save_directoryGbuffers)
 
-infodict = dict()
-infodict[ "sky"  ]  = [70, 130, 180, 23   ]
-infodict[ "road"  ]  = [128, 64, 128, 7  ]
-infodict[ "static"  ]  = [110, 190, 160, 8   ]
-infodict[ "sidewalk"  ]  = [244, 35, 232 , 9   ]
-infodict[ "vehicle"  ]  = [0, 0, 142 , 26   ]
-infodict[ "unlabeled"  ]  = [0, 0, 0, 0   ]
-infodict[ "building"  ]  = [70, 70, 70 , 4  ]
-infodict["Fence"] = [100, 40, 40 ,  11 ]
-infodict["other"] = [55, 90, 80 ,  0 ]
-infodict["Pedestrian"] = [220, 20, 60 , 24  ]
-infodict["infrastructure"] = [153, 153, 153 , 17 ]
-infodict["RoadLine"] = [157, 234, 50 , 7]
-infodict["Vegetation"] = [107, 142, 35 ,  21 ]
-infodict["Wall"] = [102, 102, 156 ,  4  ]
-
-infodict["TrafficSign"] = [220, 220, 0 , 20]
-infodict["Ground"] = [81, 0, 81 , 9]
-infodict["Bridge"] = [150, 100, 100 ,  4  ]
-infodict["RailTrack"] = [230, 150, 140 , 9  ]
-infodict["GuardRail"] = [180, 165, 180 , 9  ]
-infodict["TrafficLight"] = [250, 170, 30 , 19  ]
-infodict["Terrain"] = [145, 170, 100 , 22 ]
+infodict = {
+    "sky": [70, 130, 180, 23],
+    "road": [128, 64, 128, 7],
+    "static": [110, 190, 160, 8],
+    "sidewalk": [244, 35, 232, 9],
+    "vehicle": [0, 0, 142, 26],
+    "unlabeled": [0, 0, 0, 0],
+    "building": [70, 70, 70, 4],
+    "Fence": [100, 40, 40, 11],
+    "other": [55, 90, 80, 0],
+    "Pedestrian": [220, 20, 60, 24],
+    "infrastructure": [153, 153, 153, 17],
+    "RoadLine": [157, 234, 50, 7],
+    "Vegetation": [107, 142, 35, 21],
+    "Wall": [102, 102, 156, 4],
+    "TrafficSign": [220, 220, 0, 20],
+    "Ground": [81, 0, 81, 9],
+    "Bridge": [150, 100, 100, 4],
+    "RailTrack": [230, 150, 140, 9],
+    "GuardRail": [180, 165, 180, 9],
+    "TrafficLight": [250, 170, 30, 19],
+    "Terrain": [145, 170, 100, 22],
+}
 
 
 def encod_Gt(gt_labelmap):
 
-        h, w, chanel = gt_labelmap.shape
-        shader_map = np.zeros((h, w), dtype=np.float32)
+    h, w, chanel = gt_labelmap.shape
+    shader_map = np.zeros((h, w), dtype=np.float32)
 
 
 
-        for key in infodict.keys():
-            array = infodict.get(key)
-            color = np.array(array[ 0:3])
-            code=  array[3]
+    for key in infodict.keys():
+        array = infodict.get(key)
+        color = np.array(array[:3])
+        code=  array[3]
 
-            mask = cv2.inRange(gt_labelmap, color, color)
-            shader_map[ np.where(mask ==  255 ) ]  =  code
-
-
+        mask = cv2.inRange(gt_labelmap, color, color)
+        shader_map[ np.where(mask ==  255 ) ]  =  code
 
 
-        return shader_map
+
+
+    return shader_map
 
 
 
@@ -86,9 +86,9 @@ allfiles = []
 
 try:
 
-    for index ,folder in enumerate (sorceimagesFoldersList ) :
+    for index ,folder in enumerate (sorceimagesFoldersList ):
 
-        filelist = [file for file in os.listdir(folder)   ]
+        filelist = list(os.listdir(folder))
         print("\t", folder, "  ->found")
         folder2 = ground_truth_label_map[index]
 
@@ -124,20 +124,17 @@ try:
 except:
     print("no files was resized")
 
-save_filelist = [file for file in os.listdir(save_directoryImages)   ]
+save_filelist = list(os.listdir(save_directoryImages))
 
-f = open( os.path.join(save_directory , daatsetName + ".csv"), 'w')
-# create the csv writer
-writer = csv.writer(f)
+with open(os.path.join(save_directory, f"{daatsetName}.csv"), 'w') as f:
+    # create the csv writer
+    writer = csv.writer(f)
 
-for file in tqdm( save_filelist ):
-    path = os.path.join(save_directoryImages, file)
-    try:
-        image = cv2.imread(path)
-        writer.writerow([path])
-    except:
-        print(path, " is not loadabel as image")
-
-# close the file
-f.close()
+    for file in tqdm( save_filelist ):
+        path = os.path.join(save_directoryImages, file)
+        try:
+            image = cv2.imread(path)
+            writer.writerow([path])
+        except:
+            print(path, " is not loadabel as image")
 

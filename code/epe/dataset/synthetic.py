@@ -14,7 +14,6 @@ class SyntheticDataset(torch.utils.data.Dataset):
 		super(SyntheticDataset, self).__init__()
 		self._name     = name
 		self._log      = logging.getLogger(f'epe.dataset.{self._name}')
-		pass
 
 	@property
 	def name(self):

@@ -57,29 +57,22 @@ class CarlaDataset(SyntheticDataset):
 		self._paths    = paths
 		self._path2id  = {p[0].stem:i for i,p in enumerate(self._paths)}
 		if self._log.isEnabledFor(logging.DEBUG):
-			self._log.debug(f'Mapping paths to dataset IDs (showing first 30 entries):')
+			self._log.debug('Mapping paths to dataset IDs (showing first 30 entries):')
 			for i,(k,v) in zip(range(30),self._path2id.items()):
 				self._log.debug(f'path2id[{k}] = {v}')
-				pass
-			pass
-
-
 		try:
 			data = np.load(Path(__file__).parent / 'pfd_stats.npz')
 			# self._img_mean  = data['i_m']
 			# self._img_std   = data['i_s']
 			self._gbuf_mean = data['g_m']
 			self._gbuf_std  = data['g_s']
-			self._log.info(f'Loaded dataset stats.')
+			self._log.info('Loaded dataset stats.')
 		except:
 			# self._img_mean  = None
 			# self._img_std   = None
 			self._gbuf_mean = None
 			self._gbuf_std  = None
-			pass
-
 		self._log.info(f'Found {len(self._paths)} samples.')
-		pass
 
 
 	@property
@@ -96,12 +89,7 @@ class CarlaDataset(SyntheticDataset):
 
 	@property
 	def cls2gbuf(self):
-		if self.gbuffers == 'all':
-			# all: just handle sky class differently
-			return {\
-				0:lambda g:g[:,15:21,:,:]}
-		else:
-			return {}
+		return {0: lambda g: g[:, 15:21, :, :]} if self.gbuffers == 'all' else {}
 
 
 	def get_id(self, img_filename):
@@ -116,8 +104,6 @@ class CarlaDataset(SyntheticDataset):
 		if not gbuffer_path.exists():
 			self._log.error(f'Gbuffers at {gbuffer_path} do not exist.')
 			raise FileNotFoundError
-			pass
-
 		data = np.load(gbuffer_path)
 
 		if self.gbuffers == 'fake':
@@ -127,26 +113,17 @@ class CarlaDataset(SyntheticDataset):
 			if gt_labels.shape[0] != img.shape[-2] or gt_labels.shape[1] != img.shape[-1]:
 				gt_labels = resize(gt_labels, (img.shape[-2], img.shape[-1]), anti_aliasing=True, mode='constant')
 			gt_labels = mat2tensor(gt_labels)
-			pass
 		else:
 			img       = mat2tensor(data['img'].astype(np.float32) / 255.0)
 			gbuffers  = mat2tensor(data['gbuffers'].astype(np.float32))
 			gt_labels = mat2tensor(data['shader'].astype(np.float32))
-			pass
-
 		if torch.max(gt_labels) > 128:
 			gt_labels = gt_labels / 255.0
-			pass
-
 		if self._gbuf_mean is not None:
 			gbuffers = center(gbuffers, self._gbuf_mean, self._gbuf_std)
-			pass
-
 		if not robust_label_path.exists():
 			self._log.error(f'Robust labels at {robust_label_path} do not exist.')
 			raise FileNotFoundError
-			pass
-
 		robust_labels = imageio.imread(robust_label_path)
 		robust_labels = torch.LongTensor(robust_labels[:,:]).unsqueeze(0)
 

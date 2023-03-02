@@ -16,14 +16,13 @@ class Controller:
         self.r_t_stat = 0
         self.step     = 1
         self.max_step = max_step
-        
+
         self.disabled = target < 0
-        pass
 
     @torch.no_grad()
     def tune(self, correct_labels):
         self.running_stat += torch.tensor(\
-            (correct_labels.mean().detach(), correct_labels.shape[0]),
+                (correct_labels.mean().detach(), correct_labels.shape[0]),
             device=correct_labels.device)
 
         if self.running_stat[1] > self.num_labels_to_wait - 1:
@@ -36,9 +35,6 @@ class Controller:
 
             if self._log.isEnabledFor(logging.DEBUG):
                 self._log.debug(f'tune: r_stat: {self.r_t_stat:0.2f}, target: {self.target}, s:{sign}, p:{1.0 / (1.0 + self.step)}, step:{self.step}[{self.max_step}], wait:{self.num_labels_to_wait}')
-                pass
-            pass
-
         return 1.0 / (1.0 + self.step)
 
 
@@ -46,15 +42,15 @@ class AdaptiveBackprop:
     def __init__(self, num_discs, device, target=0.6):
         self.p = [1.01] * num_discs
         self._controllers = [Controller(device, target, name=f'c{i}') for i in range(num_discs)]
-        pass
 
     def sample(self):
-        return [random.random() < p if not c.disabled else False for p,c in zip(self.p, self._controllers)]
+        return [
+            False if c.disabled else random.random() < p
+            for p, c in zip(self.p, self._controllers)
+        ]
 
     def update(self, correct_predictions):
         """ Updates controller for every disc with disc's correct predictions. 
         """
         for i, x in correct_predictions.items():
             self.p[i] = self._controllers[i].tune(torch.cat(x, -1))
-            pass
-        pass

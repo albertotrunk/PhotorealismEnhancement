@@ -11,13 +11,13 @@ def save(c, d, name=None):
 	global k_save
 	if c:
 		k_save += 1
-		if name==None:
+		if name is None:
 			name = 'out_%d.mat' % k_save
 		sio.savemat(name, {k:d[k].detach().cpu().numpy() for k in d.keys()})
 
 def checknan(a, name, d=None):
 	if torch.any(torch.isnan(a)):
-		print('%s is nan.' % name)
+		print(f'{name} is nan.')
 		if d is None:
 			save(True, {name:a})
 		else:

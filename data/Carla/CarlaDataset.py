@@ -3,6 +3,7 @@ Created on 18.09.2020
 
 @author: rizka
 '''
+
 # !/usr/bin/env python
 
 # Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
@@ -29,8 +30,6 @@ try:
 except IndexError:
 
     print("NOOOOOOOOOOOOOOO")
-    pass
-
 import carla
 
 from carla import VehicleLightState as vls
@@ -58,7 +57,7 @@ def get_actor_blueprints(world, filter, generation):
     try:
         int_generation = int(generation)
         # Check if generation is in available generations
-        if int_generation in [1, 2]:
+        if int_generation in {1, 2}:
             bps = [x for x in bps if int(x.get_attribute('generation')) == int_generation]
             return bps
         else:

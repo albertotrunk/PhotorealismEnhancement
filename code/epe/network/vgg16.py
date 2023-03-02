@@ -47,21 +47,17 @@ class VGG16(torch.nn.Module):
 
 		def convrelu(slice, suffix, conv_id):
 			if padding == 'replicate':
-				slice.add_module('pad'+suffix, nn.ReplicationPad2d(1))
+				slice.add_module(f'pad{suffix}', nn.ReplicationPad2d(1))
 				features[conv_id].padding = (0,0)
 			elif padding == 'zero':
 				pass
 			elif padding == 'none':
 				features[conv_id].padding = (0,0)
-				pass
-
-			slice.add_module('conv'+suffix, features[conv_id])
+			slice.add_module(f'conv{suffix}', features[conv_id])
 			if replace_reluguided:
-				slice.add_module('relu'+suffix, ReLUWrap(GuidedReLUFunc))	
+				slice.add_module(f'relu{suffix}', ReLUWrap(GuidedReLUFunc))
 			else:
-				slice.add_module('relu'+suffix, nn.ReLU(True))
-				pass
-			pass
+				slice.add_module(f'relu{suffix}', nn.ReLU(True))
 
 		self.relu_0 = nn.Sequential()
 		convrelu(self.relu_0, '1_1', 0)
@@ -76,34 +72,34 @@ class VGG16(torch.nn.Module):
 		self.relu_3 = nn.Sequential()
 		convrelu(self.relu_3, '2_2', 7)
 
-		self.relu_4 = nn.Sequential()		
+		self.relu_4 = nn.Sequential()
 		self.relu_4.add_module('pool2', nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False))
 		convrelu(self.relu_4, '3_1', 10)
-		
+
 		self.relu_5 = nn.Sequential()
 		convrelu(self.relu_5, '3_2', 12)
 
-		self.relu_6 = nn.Sequential()		
+		self.relu_6 = nn.Sequential()
 		convrelu(self.relu_6, '3_3', 14)
-		
+
 		self.relu_7 = nn.Sequential()
 		self.relu_7.add_module('pool3', nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False))
 		convrelu(self.relu_7, '4_1', 17)
 
-		self.relu_8 = nn.Sequential()		
+		self.relu_8 = nn.Sequential()
 		convrelu(self.relu_8, '4_2', 19)
 
-		self.relu_9 = nn.Sequential()		
+		self.relu_9 = nn.Sequential()
 		convrelu(self.relu_9, '4_3', 21)
 
 		self.relu_10 = nn.Sequential()
 		self.relu_10.add_module('pool4', nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False))
 		convrelu(self.relu_10, '5_1', 24)
 
-		self.relu_11 = nn.Sequential()		
+		self.relu_11 = nn.Sequential()
 		convrelu(self.relu_11, '5_2', 26)
 
-		self.relu_12 = nn.Sequential()		
+		self.relu_12 = nn.Sequential()
 		convrelu(self.relu_12, '5_3', 28)
 
 		self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
@@ -113,28 +109,23 @@ class VGG16(torch.nn.Module):
 
 		self.fc_1 = nn.Sequential()
 		if replace_reluguided:
-			self.fc_1.add_module('relu6', ReLUWrap(GuidedReLUFunc))	
+			self.fc_1.add_module('relu6', ReLUWrap(GuidedReLUFunc))
 		else:
 			self.fc_1.add_module('relu6', nn.ReLU(True))
-			pass
 		self.fc_1.add_module('dropout', nn.Dropout())
 		self.fc_1.add_module('fc7', classifier[3])
 
 		self.fc_2 = nn.Sequential()
 		if replace_reluguided:
-			self.fc_2.add_module('relu7', ReLUWrap(GuidedReLUFunc))	
+			self.fc_2.add_module('relu7', ReLUWrap(GuidedReLUFunc))
 		else:
 			self.fc_2.add_module('relu7', nn.ReLU(True))
-			pass
 		self.fc_2.add_module('dropout', nn.Dropout())
 		self.fc_2.add_module('fc8', classifier[6])
 
 		if not requires_grad:
 			for param in self.parameters():
 				param.requires_grad = False
-				pass
-			pass
-		pass
 
 	def to(self, device, **kwargs):
 		logging.info(f'VGG16:to: {torch.cuda.memory_allocated(device=device)}')
@@ -149,7 +140,6 @@ class VGG16(torch.nn.Module):
 		self.std[0,0,0,0] = sr
 		self.std[0,1,0,0] = sg
 		self.std[0,2,0,0] = sb
-		pass
 
 	def normalize(self, x):
 		return (x - self.mean) / self.std
@@ -157,24 +147,17 @@ class VGG16(torch.nn.Module):
 	def fw_relu(self, x, num_relus, do_normalize=True):
 		if do_normalize:
 			x = self.normalize(x)
-			pass
-
 		out = []
 		for i in range(num_relus):
 			x = getattr(self, 'relu_%d' % i)(x)
 			out.append(x)
-			pass
 		return out
 
 	def fw_fc(self, x, num_fcs, do_normalize=True):
 		if do_normalize:
 			x = self.normalize(x)
-			pass
-
 		for i in range(13):
 			x = getattr(self, 'relu_%d' % i)(x)
-			pass
-
 		x = self.avgpool(x)
 		x = torch.flatten(x, 1)
 
@@ -182,7 +165,6 @@ class VGG16(torch.nn.Module):
 		for i in range(num_fcs):
 			x = getattr(self, 'fc_%d' % i)(x)
 			out.append(x)
-			pass
 		return out		
 
 
